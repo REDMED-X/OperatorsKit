@@ -2,12 +2,12 @@
 Find a specific loaded module in all processes or list all loaded modules in a specific process.
 
 ## Options
-`search`: find all processes that have loaded a specific module (e.g. winhttp.dll or ws2_32.dll).
-`list`: list all loaded modules in a remote process.
+* `search`: find all processes that have loaded a specific module (e.g. winhttp.dll or ws2_32.dll).
+* `list`: list all loaded modules in a remote process.
 
 ## Usage
-`findlib search <module name>`
-`findlib list <pid>`
+* `findlib search <module name>`
+* `findlib list <pid>`
 
 ## Compile
 - 1\. Make sure Visual Studio is installed and supports C/C++.
