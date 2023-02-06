@@ -4,11 +4,11 @@ Blind Eventlog by suspending its threads. This technique requires elevated privi
 Be aware that all events, from the period the threads were suspended, will be pushed to Eventlog the moment the threads are resumed.
 
 ## Options
-`suspend`: find and suspend all Eventlog threads and disrupt its functionality.\n
-`resume`: find and resume all Eventlog threads and restore its functionality.
+* `suspend`: find and suspend all Eventlog threads and disrupt its functionality.
+* `resume`: find and resume all Eventlog threads and restore its functionality.
 
 ## Usage
-`blindeventlog <suspend | resume>`
+* `blindeventlog <suspend | resume>`
 
 ## Compile
 - 1\. Make sure Visual Studio is installed and supports C/C++.
