@@ -2,10 +2,10 @@
 Get a list of all processes running on the remote host.
 
 ## Options
-`<FQDN or IP>`: specify the target host FQDN or IP. 
+* `<FQDN or IP>`: specify the target host FQDN or IP. 
 
 ## Usage
-`psremote <FQDN or IP remote host>`
+* `psremote <FQDN or IP remote host>`
 
 ## Compile
 - 1\. Make sure Visual Studio is installed and supports C/C++.
