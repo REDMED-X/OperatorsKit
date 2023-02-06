@@ -2,11 +2,11 @@
 Load a on disk present DLL via RtlRemoteCall API in a remote process. Depending on the process from which you run this tool, it may or may not work.
 
 ## Options
-`<pid>`: specify the target process to load the DLL into. 
-`path`: full path to the on disk present DLL. 
+* `<pid>`: specify the target process to load the DLL into. 
+* `path`: full path to the on disk present DLL. 
 
 ## Usage
-`loadlib <pid> <path to dll>`
+* `loadlib <pid> <path to dll>`
 
 ## Compile
 - 1\. Make sure Visual Studio is installed and supports C/C++.
