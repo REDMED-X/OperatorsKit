@@ -2,10 +2,10 @@
 Find processes that already have memory allocated for read/write/execute (like most .NET processes).
 
 ## Options
-`<pid>`: specify target process ID to enumerate.
+* `<pid>`: specify target process ID to enumerate.
 
 ## Usage
-`findrwx <pid>`
+* `findrwx <pid>`
 
 ## Compile
 - 1\. Make sure Visual Studio is installed and supports C/C++.
