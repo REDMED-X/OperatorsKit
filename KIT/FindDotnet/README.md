@@ -2,7 +2,7 @@
 Find processes that most likely have .NET loaded by searching for the section name: `\BaseNamedObjects\Cor_Private_IPCBlock(_v4)_<ProcessId>`
 
 ## Usage
-`finddotnet`
+* `finddotnet`
 
 ## Compile
 - 1\. Make sure Visual Studio is installed and supports C/C++.
