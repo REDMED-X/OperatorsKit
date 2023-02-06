@@ -1,5 +1,5 @@
 # OperatorsKit
-This repository contains a collection of tools that integrate with Cobalt Strike through Beacon Object Files (BOF). 
+This repository contains a collection of tools that integrate with Cobalt Strike through Beacon Object Files (BOFs). 
 
 ## Kit content
 The following tools are currently in the operators' kit: 
@@ -17,9 +17,9 @@ The following tools are currently in the operators' kit:
 |**[SilenceSysmon](KIT/SilenceSysmon)**|Silence the Sysmon service by patching its capability to write ETW events to the log.|
 
 ## Usage
-Each individual tool has its own README file with usage and compile information. 
+Each individual tool has its own README file with usage information and compile instructions. 
 
 ## Credits
-A round of virtual applause to [reenz0h](https://twitter.com/SEKTOR7net). Lots of tools in this kit are based on his code examples and ideas from the Malware Development and Windows Evasion courses. I highly recommend taking them!
+A round of virtual applause to [reenz0h](https://twitter.com/SEKTOR7net). Lots of tools in this kit are based on his code examples from the Malware Development and Windows Evasion courses. I highly recommend purchasing them!
 
 Furthermore, some code from the [C2-Tool-Collection](https://github.com/outflanknl/C2-Tool-Collection) project is copied to neatly print beacon output. 
