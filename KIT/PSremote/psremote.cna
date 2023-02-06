@@ -1,0 +1,33 @@
+# author REDMED-X
+
+beacon_command_register(
+	"psremote", "List all running processes on a remote host.\n",
+	"INFO:\nGet a list of all processes running on the remote host.\n\n" .
+	"USAGE:\npsremote <FQDN or IP remote host>\n\n");
+
+
+alias psremote {
+	local('$handle $data $args');
+	
+	# figure out the arch of this session
+    $bid = $1;
+	$remotehost = $2;
+	
+	
+	if ($remotehost eq "") {
+		berror($bid, "Please make sure that the FQDN or IP of the remote host is specified.");
+		return;
+	}
+	
+	# read in the right BOF file
+	$handle = openf(script_resource("psremote.o"));
+	$data = readb($handle, -1);
+	closef($handle);
+
+	# pack our arguments
+	$arg_data = bof_pack($1, "z", $remotehost);
+	
+	# execute it.
+	blog($bid, "Tasked to list processes of host: $+  $remotehost");
+	beacon_inline_execute($bid, $data, "go", $arg_data);
+}

