@@ -6,7 +6,7 @@ The following tools are currently in the operators' kit:
 
 |Name|Decription|
 |----|----------|
-|**[BlindEventlog](KIT/BlindEvenlog)**|Blind Eventlog by suspending its threads.|
+|**[BlindEventlog](KIT/BlindEventlog)**|Blind Eventlog by suspending its threads.|
 |**[FindDotnet](KIT/FindDotnet)**|Find processes that most likely have .NET loaded.|
 |**[FindHandle](KIT/FindHandle)**|Find "process" and "thread" handle types between processes.|
 |**[FindLib](KIT/FindLib)**|Find loaded module(s) in remote process(es).|
