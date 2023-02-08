@@ -1,7 +1,7 @@
 # DllEnvHijacking
 This tool will: setup a hidden file structure, move an already on disk present malicious proxy DLL to the new system32 folder, hide the proxy DLL, modify the SYSTEMROOT environment variable, run the vulnerable binary as a spoofed process to execute the malicious DLL, and reset the original SYSTEMROOT environment variable so the beacon keeps working as intended. 
 
->Make sure that before you run this tool, the uploaded you malicious proxy DLL to an accessible folder on disk. 
+>Make sure that before you run this tool, you uploaded the malicious proxy DLL to an accessible folder on disk. 
 
 More information about the DLL Environment Hijacking attack can be found [here](https://www.wietzebeukema.nl/blog/save-the-environment-variables). 
 
