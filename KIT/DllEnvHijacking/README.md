@@ -10,7 +10,7 @@ More information about the DLL Environment Hijacking attack can be found [here](
 * `<malicious DLL name>`: the name of the malicious DLL that will be loaded by the vulnerable binary (e.g. mswsock.dll).
 * `<path to mal. DLL folder>`: the path on the target system to the folder were the malicious DLL is stored (don't add the DLL name and end the path with a `\`)
 * `<name of vulnerable binary>`: the name of the vulnerable binary that will be executed and loads the malicious DLL (e.g. hostname.exe).
-* `<pid parent proc>`: the process ID of the parent process under which the vulnerable binary will run as a child.
+* `<pid parent proc>`: the process ID of the parent process under which the vulnerable binary will run as a child (parent process spoofing).
 
 ## Usage
 * `dllenvhijacking <new sysroot dir> <malicious DLL name> <path to mal. DLL folder> <name of vulnerable binary> <pid parent proc>`
