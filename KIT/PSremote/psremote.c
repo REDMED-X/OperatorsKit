@@ -6,7 +6,7 @@
 
 
 
-//Code from: https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
+//https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
 HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
 	HRESULT hr = S_FALSE;
 	va_list argList;
@@ -19,8 +19,7 @@ HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
 		}
 	}
 
-	// For BOF we need to avoid large stack buffers, so put print buffer on heap.
-	if (g_lpwPrintBuffer <= (LPWSTR)1) { // Allocate once and free in BeaconOutputStreamW. 
+	if (g_lpwPrintBuffer <= (LPWSTR)1) {  
 		g_lpwPrintBuffer = (LPWSTR)MSVCRT$calloc(MAX_STRING, sizeof(WCHAR));
 		if (g_lpwPrintBuffer == NULL) {
 			hr = E_FAIL;
@@ -45,14 +44,14 @@ HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
 CleanUp:
 
 	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$memset(g_lpwPrintBuffer, 0, MAX_STRING * sizeof(WCHAR)); // Clear print buffer.
+		MSVCRT$memset(g_lpwPrintBuffer, 0, MAX_STRING * sizeof(WCHAR)); 
 	}
 
 	va_end(argList);
 	return hr;
 }
 
-//Code from: https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
+//https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
 VOID BeaconOutputStreamW() {
 	STATSTG ssStreamData = { 0 };
 	SIZE_T cbSize = 0;
@@ -77,7 +76,6 @@ VOID BeaconOutputStreamW() {
 		}
 
 		BeaconPrintf(CALLBACK_OUTPUT, "%ls", lpwOutput);
-		//BeaconPrintf(CALLBACK_OUTPUT, "DONE"); //DEBUG
 	}
 
 CleanUp:
@@ -88,7 +86,7 @@ CleanUp:
 	}
 
 	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$free(g_lpwPrintBuffer); // Free print buffer.
+		MSVCRT$free(g_lpwPrintBuffer); 
 		g_lpwPrintBuffer = NULL;
 	}
 
@@ -119,9 +117,7 @@ int ListProcesses(HANDLE handleTargetHost) {
 		KERNEL32$MultiByteToWideChar(CP_ACP, 0, procName, -1, WCprocName, 256);
 		BeaconPrintToStreamW(L"%-40s\t%d\t%23d\n",WCprocName ,proc_info[i].ProcessId ,proc_info[i].SessionId);
 	}
-	
 	WTSAPI32$WTSCloseServer(handleTargetHost);
-	
 	return 0;
 }
 
@@ -137,10 +133,8 @@ void go(char *args, int len) {
     hostName = BeaconDataExtract(&parser, &argSize);
 
 	handleTargetHost = WTSAPI32$WTSOpenServerA(hostName);
-	
 	res = ListProcesses(handleTargetHost);
 	
-	//print data to CS console
 	BeaconOutputStreamW();
 
 	return 0;

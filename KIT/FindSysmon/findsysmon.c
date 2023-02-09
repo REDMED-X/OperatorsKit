@@ -10,7 +10,7 @@
 
 
 
-//Code from: https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
+//https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
 HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
 	HRESULT hr = S_FALSE;
 	va_list argList;
@@ -55,7 +55,7 @@ CleanUp:
 	return hr;
 }
 
-//Code from: https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
+//https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
 VOID BeaconOutputStreamW() {
 	STATSTG ssStreamData = { 0 };
 	SIZE_T cbSize = 0;
@@ -100,9 +100,7 @@ CleanUp:
 }
 
 
-
-
-//https://gist.githubusercontent.com/stevemk14ebr/af8053c506ef895cd520f8017a81f913/raw/98944bc6ae995229d5231568a8ae73dd287e8b4f/guids
+//IID: https://gist.githubusercontent.com/stevemk14ebr/af8053c506ef895cd520f8017a81f913/raw/98944bc6ae995229d5231568a8ae73dd287e8b4f/guids
 BOOL PrintSysmonPID(wchar_t * guid) {
 	HRESULT hr = S_OK;
 	ITraceDataProvider *itdProvider = NULL;
@@ -118,13 +116,13 @@ BOOL PrintSysmonPID(wchar_t * guid) {
 	hr = OLE32$CoCreateInstance(&CTraceDataProvider, 0, CLSCTX_INPROC_SERVER, &IIDITraceDataProvider, (LPVOID *) &itdProvider); 
 	if(FAILED(hr))
 	{
-		//BeaconPrintf(CALLBACK_ERROR,"Failed to create instance of object: %lX", hr);
+		BeaconPrintf(CALLBACK_ERROR,"Failed to create instance of object: %lX", hr);
 	}
 	
 	hr = itdProvider->lpVtbl->Query(itdProvider, guid, NULL);
 	if(FAILED(hr))
 	{
-		//BeaconPrintf(CALLBACK_ERROR,"Failed to query the process based on the GUID: %lX\n", hr);
+		BeaconPrintf(CALLBACK_ERROR,"Failed to query the process based on the GUID: %lX\n", hr);
 	}
 	IValueMap *ivmProcesses = NULL;
 	hr = itdProvider->lpVtbl->GetRegisteredProcesses(itdProvider, &ivmProcesses);
@@ -218,12 +216,10 @@ BOOL FindSysmon() {
         status = TDH$TdhEnumerateProviders(penum, &BufferSize);
     }
 	
-	//AANPASSEN
     if (status != ERROR_SUCCESS) 
 		BeaconPrintf(CALLBACK_ERROR,"TdhEnumerateProviders failed.\n");
 	
     else {
-        // search for Sysmon guid
         for (DWORD i = 0; i < penum->NumberOfProviders; i++) {
             hr = OLE32$StringFromGUID2(&penum->TraceProviderInfoArray[i].ProviderGuid, StringGuid, ARRAYSIZE(StringGuid));
             if (FAILED(hr)) return FALSE;
@@ -264,21 +260,18 @@ int PrintMiniFilterData(FILTER_AGGREGATE_STANDARD_INFORMATION * lpFilterInfo) {
 	
 	fltInfo = (FILTER_AGGREGATE_STANDARD_INFORMATION *) lpFilterInfo;
 
-	// convert Filter name
 	int fltName_size = fltInfo->Type.MiniFilter.FilterNameLength;
 	LONGLONG src = ((LONGLONG) lpFilterInfo) + fltInfo->Type.MiniFilter.FilterNameBufferOffset;
 	fltName = (char *) MSVCRT$malloc(fltName_size + 2);
 	MSVCRT$memset(fltName, 0, fltName_size + 2);
 	MSVCRT$memcpy(fltName, (void *) src, fltName_size);
 	
-	// convert Filter altitude
 	int fltAlt_size = fltInfo->Type.MiniFilter.FilterAltitudeLength;
 	src = ((LONGLONG) lpFilterInfo) + fltInfo->Type.MiniFilter.FilterAltitudeBufferOffset;
 	fltAlt = (char *) MSVCRT$malloc(fltAlt_size + 2);
 	MSVCRT$memset(fltAlt, 0, fltAlt_size + 2);
 	MSVCRT$memcpy(fltAlt, (void *) src, fltAlt_size);	
 	
-	// print only data about minifilters
 	if (fltInfo->Flags == FLTFL_ASI_IS_MINIFILTER) {
 		BeaconPrintToStreamW(L"%-29s%s\t%26d\n", fltName, fltAlt, fltInfo->Type.MiniFilter.NumberOfInstances);
 	}
@@ -306,7 +299,6 @@ BOOL FindMiniFilters() {
 	PrintMiniFilterData((FILTER_AGGREGATE_STANDARD_INFORMATION *) lpFilterInfo);
 	foundMinifilter = TRUE;
 
-	
 	while(true) {
 		res = Fltlib$FilterFindNext(hFilterFind, FilterAggregateStandardInformation, lpFilterInfo, dwFilterInfoSize, &dwBytesReturned);
 		if (res == HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS)) break;

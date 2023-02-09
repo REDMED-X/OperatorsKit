@@ -21,8 +21,7 @@ HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
 		}
 	}
 
-	// For BOF we need to avoid large stack buffers, so put print buffer on heap.
-	if (g_lpwPrintBuffer <= (LPWSTR)1) { // Allocate once and free in BeaconOutputStreamW. 
+	if (g_lpwPrintBuffer <= (LPWSTR)1) { 
 		g_lpwPrintBuffer = (LPWSTR)MSVCRT$calloc(MAX_STRING, sizeof(WCHAR));
 		if (g_lpwPrintBuffer == NULL) {
 			hr = E_FAIL;
@@ -89,7 +88,7 @@ CleanUp:
 	}
 
 	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$free(g_lpwPrintBuffer); // Free print buffer.
+		MSVCRT$free(g_lpwPrintBuffer); 
 		g_lpwPrintBuffer = NULL;
 	}
 
@@ -122,7 +121,6 @@ BOOL GetHandles(int basePid, const BYTE flags, int targetPid) {
     NtDuplicateObject_t pNtDuplicateObject = (NtDuplicateObject_t) GetProcAddress(GetModuleHandle("ntdll.dll"), "NtDuplicateObject");
     NtQueryObject_t pNtQueryObject = (NtQueryObject_t) GetProcAddress(GetModuleHandle("ntdll.dll"), "NtQueryObject");
 
-	// parse which handle types extract
 	WCHAR Filter[100];
 	switch(flags) {
 		case QUERY_PROC:	MSVCRT$swprintf_s(Filter, 50, L"%s", L"Process"); break;
@@ -147,13 +145,10 @@ BOOL GetHandles(int basePid, const BYTE flags, int targetPid) {
         UNICODE_STRING objectName;
         ULONG returnLength;
 		
-		//Skip system processes
 		if(objHandle.UniqueProcessId == 4) continue;
 		
-		//p2h: if the process doens't match the basePid, go to the next
         if ((basePid != 0) && (objHandle.UniqueProcessId != basePid)) continue;
 		
-		//all: for some reason handles dont fully close if the tool is finshed in COFF. This will skip all the handles from the previous enumeration task
 		if (objHandle.UniqueProcessId == KERNEL32$GetCurrentProcessId()) continue;
  
  
@@ -199,7 +194,6 @@ BOOL GetHandles(int basePid, const BYTE flags, int targetPid) {
 			}
 		}
 		
-		//h2p: if the process doens't match the targetPid, go to the next
 		if (targetPid != 0 && targetPid != procID) {
 			MSVCRT$free(objectTypeInfo);
 			MSVCRT$free(objectNameInfo);
@@ -207,7 +201,6 @@ BOOL GetHandles(int basePid, const BYTE flags, int targetPid) {
 			continue;
 		}
 		
-		//if the PID of the handle is 0 or pointing to itself, skip it otherwise print output to stream
 		if(procID != 0 && objHandle.UniqueProcessId != procID) {
 			WCHAR WprocHostName[100];
 			WCHAR WprocNameTemp[100];
@@ -249,9 +242,6 @@ int go(char *args, int len) {
 	BeaconDataParse(&parser, args, len);
 	search = BeaconDataExtract(&parser, NULL);
 	query = BeaconDataExtract(&parser, NULL);
-
-	//BeaconPrintf(CALLBACK_OUTPUT, "search: %s\n", search); //DEBUG
-	//BeaconPrintf(CALLBACK_OUTPUT, "query: %s\n", query); //DEBUG
 
 	if (MSVCRT$strcmp(query, "proc") == 0) flags = QUERY_PROC;
 	else if (MSVCRT$strcmp(query, "thread") == 0) flags = QUERY_THREAD;

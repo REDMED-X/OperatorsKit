@@ -6,7 +6,7 @@
 #include "findrwx.h"
 
 
-//Code from: https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
+//https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
 HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
 	HRESULT hr = S_FALSE;
 	va_list argList;
@@ -19,8 +19,7 @@ HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
 		}
 	}
 
-	// For BOF we need to avoid large stack buffers, so put print buffer on heap.
-	if (g_lpwPrintBuffer <= (LPWSTR)1) { // Allocate once and free in BeaconOutputStreamW. 
+	if (g_lpwPrintBuffer <= (LPWSTR)1) { 
 		g_lpwPrintBuffer = (LPWSTR)MSVCRT$calloc(MAX_STRING, sizeof(WCHAR));
 		if (g_lpwPrintBuffer == NULL) {
 			hr = E_FAIL;
@@ -52,7 +51,7 @@ CleanUp:
 	return hr;
 }
 
-//Code from: https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
+//https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
 VOID BeaconOutputStreamW() {
 	STATSTG ssStreamData = { 0 };
 	SIZE_T cbSize = 0;
@@ -87,7 +86,7 @@ CleanUp:
 	}
 
 	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$free(g_lpwPrintBuffer); // Free print buffer.
+		MSVCRT$free(g_lpwPrintBuffer);
 		g_lpwPrintBuffer = NULL;
 	}
 
@@ -99,7 +98,6 @@ CleanUp:
 }
 
 
-//find RWX memory region in found .NET process
 BOOL FindRWX(HANDLE hProcess) {
 	
 	BOOL foundRWX = FALSE;
@@ -116,11 +114,9 @@ BOOL FindRWX(HANDLE hProcess) {
 	BeaconPrintToStreamW(L"\nMemory address\t\t\tByte size\n");
 	BeaconPrintToStreamW(L"================================================\n");
 	
-	// query remote process memory information
 	while (KERNEL32$VirtualQueryEx(hProcess, addr, &mbi, sizeof(mbi))) {
 		addr = (LPVOID)((DWORD_PTR) mbi.BaseAddress + mbi.RegionSize);
 
-		// look for RWX memory regions which are not backed by an image
 		if (mbi.Protect == PAGE_EXECUTE_READWRITE && mbi.State == MEM_COMMIT && mbi.Type == MEM_PRIVATE) {
 			BeaconPrintToStreamW(L"%#-30llx\t%#7llu\n", mbi.BaseAddress, mbi.RegionSize);
 			foundRWX = TRUE;
@@ -154,7 +150,6 @@ void go(char *args, int len) {
 		BeaconPrintf(CALLBACK_ERROR, "No READ, WRITE, EXECUTE memory region found in the specified process!");
 	}
 	else {
-		//print data to CS console
 		BeaconOutputStreamW();
 		BeaconPrintf(CALLBACK_OUTPUT, "\n[+] DONE");
 	}

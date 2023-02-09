@@ -107,21 +107,6 @@ BOOL SetPrivilege(LPCTSTR lpszPrivilege, BOOL bEnablePrivilege) {
     TOKEN_PRIVILEGES tp;
     LUID luid;
 
-	/*
-	//alternative option if advapi32 isn't getting loaded
-	HMODULE hAdvapi32;
-    hAdvapi32 = KERNEL32$LoadLibraryA("Advapi32.dll");
-    if (hAdvapi32 == NULL) {
-        return FALSE;
-    }
-	
-    OpenProcessToken_t pOpenProcessToken = (OpenProcessToken_t)GetProcAddress(hAdvapi32, "OpenProcessToken");
-    if (pOpenProcessToken == NULL) {
-        return FALSE;
-    }
-    if (!pOpenProcessToken(KERNEL32$GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken)) return FALSE;
-	*/
-	
 	if (!Advapi32$OpenProcessToken(KERNEL32$GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken)) return FALSE;
     if (!Advapi32$LookupPrivilegeValueA(NULL, lpszPrivilege, &luid)) return FALSE; 
 

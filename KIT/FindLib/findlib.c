@@ -10,7 +10,7 @@
 #pragma comment(lib, "Shlwapi.lib")
 
 
-//Code from: https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
+//https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
 HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
 	HRESULT hr = S_FALSE;
 	va_list argList;
@@ -23,8 +23,7 @@ HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
 		}
 	}
 
-	// For BOF we need to avoid large stack buffers, so put print buffer on heap.
-	if (g_lpwPrintBuffer <= (LPWSTR)1) { // Allocate once and free in BeaconOutputStreamW. 
+	if (g_lpwPrintBuffer <= (LPWSTR)1) {
 		g_lpwPrintBuffer = (LPWSTR)MSVCRT$calloc(MAX_STRING, sizeof(WCHAR));
 		if (g_lpwPrintBuffer == NULL) {
 			hr = E_FAIL;
@@ -56,7 +55,7 @@ CleanUp:
 	return hr;
 }
 
-//Code from: https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
+//https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
 VOID BeaconOutputStreamW() {
 	STATSTG ssStreamData = { 0 };
 	SIZE_T cbSize = 0;
@@ -91,7 +90,7 @@ CleanUp:
 	}
 
 	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$free(g_lpwPrintBuffer); // Free print buffer.
+		MSVCRT$free(g_lpwPrintBuffer); 
 		g_lpwPrintBuffer = NULL;
 	}
 

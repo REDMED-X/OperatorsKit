@@ -25,8 +25,7 @@ HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
 		}
 	}
 
-	// For BOF we need to avoid large stack buffers, so put print buffer on heap.
-	if (g_lpwPrintBuffer <= (LPWSTR)1) { // Allocate once and free in BeaconOutputStreamW. 
+	if (g_lpwPrintBuffer <= (LPWSTR)1) { 
 		g_lpwPrintBuffer = (LPWSTR)MSVCRT$calloc(MAX_STRING, sizeof(WCHAR));
 		if (g_lpwPrintBuffer == NULL) {
 			hr = E_FAIL;
@@ -93,7 +92,7 @@ CleanUp:
 	}
 
 	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$free(g_lpwPrintBuffer); // Free print buffer.
+		MSVCRT$free(g_lpwPrintBuffer);
 		g_lpwPrintBuffer = NULL;
 	}
 
@@ -118,7 +117,6 @@ BOOL FindDotNet() {
 	LPCSTR procName;
 	WCHAR WCprocName[256];
 	
-	// resolve function addresses
 	NtGetNextProcess_t pNtGetNextProcess = (NtGetNextProcess_t) GetProcAddress(GetModuleHandle("ntdll.dll"), "NtGetNextProcess");
 	NtOpenSection_t pNtOpenSection = (NtOpenSection_t) GetProcAddress(GetModuleHandle("ntdll.dll"), "NtOpenSection");
 	if (pNtGetNextProcess == NULL || pNtOpenSection == NULL) {
@@ -126,32 +124,25 @@ BOOL FindDotNet() {
 		return -1;		
 	}
 	
-	// Most .NET processes have a handle open to a section named \BaseNamedObjects\Cor_Private_IPCBlock(_v4)_<ProcessId>.
 	WCHAR objPath[] = L"\\BaseNamedObjects\\Cor_Private_IPCBlock_v4_";
 	sectionName.Buffer = (PWSTR)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, 500);
-
 
 	BeaconPrintToStreamW(L"\nProcess name\t\t\t\t\t\tPID\n");
 	BeaconPrintToStreamW(L"=====================================================================\n");
 
-
-	// loop through all processes
 	while (!pNtGetNextProcess(currentProc, MAXIMUM_ALLOWED, 0, 0, &currentProc)) {
 		
 		pid = KERNEL32$GetProcessId(currentProc);
 		if (pid == 0) continue;		
 
-		// convert INT to WCHAR
 		USER32$wsprintfW(ProcNumber, L"%d", pid);
 
-		// and fill out UNICODE_STRING structure
 		MSVCRT$memset(sectionName.Buffer, 0, 500);
 		MSVCRT$memcpy(sectionName.Buffer, objPath, MSVCRT$wcslen(objPath) * 2);   // add section name "prefix"
 		KERNEL32$lstrcatW(sectionName.Buffer, ProcNumber);
 		sectionName.Length = MSVCRT$wcslen(sectionName.Buffer) * 2;		// finally, adjust the string size
 		sectionName.MaximumLength = sectionName.Length + 1;		
 	
-		// try to open the section - if exists, .NET process is found
 		InitializeObjectAttributes(&objectAttributes, &sectionName, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
 		HANDLE sectionHandle = NULL;		
@@ -182,7 +173,6 @@ int go(void) {
 		BeaconPrintf(CALLBACK_ERROR, "No .NET process found!");
 	}
 	else {
-		//print data to CS console
 		BeaconOutputStreamW();
 	}
 	
