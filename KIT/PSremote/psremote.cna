@@ -1,7 +1,7 @@
 # author REDMED-X
 
 beacon_command_register(
-    "psremote", "List all running processes on a remote host.\n",
+    "psremote", "List all running processes on a remote host.",
     "INFO:\nGet a list of all processes running on the remote host.\n\n" .
     "USAGE:\npsremote <FQDN or IP remote host>\n\n");
 

@@ -1,7 +1,7 @@
 # author REDMED-X
 
 beacon_command_register(
-    "blindeventlog", "Blind Eventlog by suspending its threads.\n",
+    "blindeventlog", "Blind Eventlog by suspending its threads.",
     "INFO:\nBlind Eventlog by suspending its threads. This technique requires elevated privileges.\nBe aware that all events, from the period the threads were suspended, will be pushed to Eventlog the moment the threads are resumed.\n\nOPTIONS:\n[suspend]: find and suspend all Eventlog threads and disrupt its functionality\n[resume]: find and resume all Eventlog threads and restore its functionality\n\n" .
     "USAGE:\nblindeventlog <suspend | resume>\n\n");
 

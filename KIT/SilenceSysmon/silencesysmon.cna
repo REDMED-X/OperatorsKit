@@ -1,7 +1,7 @@
 # author REDMED-X
 
 beacon_command_register(
-    "silencesysmon", "Silence Sysmon by patching its capability to write ETW events to the log.\n",
+    "silencesysmon", "Silence Sysmon by patching its capability to write ETW events to the log.",
     "INFO:\nSilence the Sysmon service by patching its capability to write ETW events to the log.\nRestarting the Sysmon service or the system itself will clear the patch and Sysmon will resume working normally.\nAltough this will not leave any traces in the log, there will be a time gap between the last and first new event.\n\nOPTIONS:\n[pid]: the process ID of the Sysmon service running on the system.\n\n" .
     "USAGE:\nsilencesysmon <sysmon pid>\n\n");
 

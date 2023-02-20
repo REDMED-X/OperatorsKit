@@ -1,7 +1,7 @@
 # author REDMED-X
 
 beacon_command_register(
-    "findsysmon", "Verify if Sysmon is running.\n",
+    "findsysmon", "Verify if Sysmon is running.",
     "INFO:\nVerify if Sysmon is running. This can be done by checking the registry or by enumerating Minifilter drivers and search for one that is associated with Sysmon.\n\nOPTIONS:\n[reg]: search the registry to check if Sysmon is present on the system and return the Sysmon service PID if active.\n[driver]: list all the Minifilter drivers on the system to check manually (requires elevated privileges).\n\n" .
     "USAGE:\nfindsysmon <reg | driver>\n\n");
 
