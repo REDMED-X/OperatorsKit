@@ -8,7 +8,7 @@ WINBASEAPI void *__cdecl MSVCRT$memcpy(void *Dst, const void *Src, size_t MaxCou
 WINBASEAPI size_t __cdecl MSVCRT$wcslen(const wchar_t *_Str);
 WINBASEAPI LPVOID WINAPI KERNEL32$HeapAlloc(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes);
 WINBASEAPI int __cdecl MSVCRT$printf(const char * _Format,...);
-DECLSPEC_IMPORT int WINAPIV WINAPI USER32$wsprintfW(LPWSTR unnamedParam1, LPCWSTR unnamedParam2, ...);
+DECLSPEC_IMPORT int WINAPI USER32$wsprintfW(LPWSTR unnamedParam1, LPCWSTR unnamedParam2, ...);
 WINBASEAPI void __cdecl MSVCRT$memset(void *dest, int c, size_t count);
 DECLSPEC_IMPORT DWORD WINAPI KERNEL32$K32GetProcessImageFileNameA(HANDLE hProcess, LPSTR lpImageFileName, DWORD nSize);
 DECLSPEC_IMPORT LPCSTR WINAPI SHLWAPI$PathFindFileNameA(LPCSTR pszPath);
