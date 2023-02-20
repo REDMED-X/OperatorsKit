@@ -1,19 +1,19 @@
 # author REDMED-X
 
 beacon_command_register(
-	"findrwx", "Find RWX memory regions in a target process.",
-	"INFO:\nFind processes that already have memory allocated for read/write/execute (like most .NET processes)\n\nOPTIONS:\n[pid]: target process to enumerate\n\n" .
-	"USAGE:\nfindrwx <pid>\n\n");
+    "findrwx", "Find RWX memory regions in a target process.",
+    "INFO:\nFind processes that already have memory allocated for read/write/execute (like most .NET processes)\n\nOPTIONS:\n[pid]: target process to enumerate\n\n" .
+    "USAGE:\nfindrwx <pid>\n\n");
 
 alias findrwx {
     $bid = $1;
-	$pid = $2;
+    $pid = $2;
 
-	if ($pid eq "") {
-		berror($bid, "Please make sure that the PID of the target process is specified.");
-		return;
-	}
-	
+    if ($pid eq "") {
+        berror($bid, "Please make sure that the PID of the target process is specified.");
+        return;
+    }
+
     # Read in the right BOF file
     $handle = openf(script_resource("findrwx.o"));
     $data   = readb($handle, -1);
@@ -21,9 +21,9 @@ alias findrwx {
 
     # Pack our arguments
     $arg_data  = bof_pack($bid, "i", $pid);
-    
-	blog($bid, "Tasked to verify if the target process has RWX memory regions..");
-	
+
+    blog($bid, "Tasked to verify if the target process has RWX memory regions..");
+
     beacon_inline_execute($bid, $data, "go", $arg_data);
 }
 

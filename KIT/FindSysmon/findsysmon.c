@@ -323,7 +323,7 @@ int go(char *args, int len) {
 	if (MSVCRT$strcmp(action, "reg") == 0) {
 		res = FindSysmon();
 		if(!res) {
-			BeaconPrintf(CALLBACK_ERROR, "[+] No Sysmon service found :)\n");
+			BeaconPrintf(CALLBACK_OUTPUT, "[+] No Sysmon service found :)\n");
 			return 0;
 		}
 		else  {
@@ -349,7 +349,5 @@ int go(char *args, int len) {
 
 	return 0;
 }
-
-
 
 

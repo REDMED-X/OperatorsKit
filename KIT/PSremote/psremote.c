@@ -98,16 +98,17 @@ CleanUp:
 }
 
 
-int ListProcesses(HANDLE handleTargetHost) {
+BOOL ListProcesses(HANDLE handleTargetHost) {
 
 	WTS_PROCESS_INFOA * proc_info;
 	DWORD pi_count = 0;
 	LPSTR procName; 
 	WCHAR WCprocName[256];
+	BOOL RemoteProc = FALSE;
 	
 	if (!WTSAPI32$WTSEnumerateProcessesA(handleTargetHost, 0, 1, &proc_info, &pi_count)) {
 		 BeaconPrintf(CALLBACK_ERROR, "Failed to get a valid handle to the specified host!\n");
-		return -1;
+		return RemoteProc;
 	}
 	
 	BeaconPrintToStreamW(L"\nProcess name\t\t\t\tPID\t\t\tSessionID\n");
@@ -116,9 +117,10 @@ int ListProcesses(HANDLE handleTargetHost) {
 		procName = proc_info[i].pProcessName;
 		KERNEL32$MultiByteToWideChar(CP_ACP, 0, procName, -1, WCprocName, 256);
 		BeaconPrintToStreamW(L"%-40s\t%d\t%23d\n",WCprocName ,proc_info[i].ProcessId ,proc_info[i].SessionId);
+		RemoteProc = TRUE;
 	}
 	WTSAPI32$WTSCloseServer(handleTargetHost);
-	return 0;
+	return RemoteProc;
 }
 
 void go(char *args, int len) {
@@ -127,7 +129,7 @@ void go(char *args, int len) {
 	datap parser;
 	DWORD argSize = NULL;
 	HANDLE handleTargetHost = NULL;
-	int res;
+	BOOL res = NULL;
 
 	BeaconDataParse(&parser, args, len);
     hostName = BeaconDataExtract(&parser, &argSize);
@@ -135,7 +137,14 @@ void go(char *args, int len) {
 	handleTargetHost = WTSAPI32$WTSOpenServerA(hostName);
 	res = ListProcesses(handleTargetHost);
 	
-	BeaconOutputStreamW();
+	if(!res) {
+		BeaconPrintf(CALLBACK_ERROR, "[-] Couldn't list remote processes. Do you have enough privileges on the remote host?\n");
+		return 0;
+	}
+	else  {
+		BeaconOutputStreamW();
+		BeaconPrintf(CALLBACK_OUTPUT, "[+] DONE");
+	}
 
 	return 0;
 }
