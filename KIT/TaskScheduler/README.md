@@ -20,11 +20,11 @@ This tool can be used to create or delete a scheduled task. It supports multiple
 * `unlock`: Create task with trigger "On workstation unlock" (requires admin privs if set for another user or all users).
 
 ## Trigger specific parameters
-* `startTime`: Start time of the trigger in format: 2023-03-24T12:08:00.
-* `expireTime`: Expiration time of the trigger in format: 2023-03-24T12:08:00.
-* `daysInterval`: Interval in number of days. For example: 1 or 3.
-* `delay`: Random time delay after the start time in which the trigger is hit. Use format "PT2H" for hours and "PT15M" for minutes.
-* `userID`: Specify the user for which the trigger is set in format: "DOMAIN\username" for domain users, "username" for local system users and "" for all users (requires admin privs if set for another user or all users).
+* `startTime`: Start time of the trigger in format: `2023-03-24T12:08:00`.
+* `expireTime`: Expiration time of the trigger in format: `2023-03-24T12:08:00`.
+* `daysInterval`: Interval in number of days. For example: `1` or `3`.
+* `delay`: Random time delay after the start time in which the trigger is hit. Use format `PT2H` for hours and `PT15M` for minutes.
+* `userID`: Specify the user for which the trigger is set in format: `"DOMAIN\username"` for domain users, `username` for local system users and `""` for all users (requires admin privs if set for another user or all users).
 
 ## Usage
 * `taskscheduler create <taskName> <programPath> "<(optional) programArguments>" onetime <startTime>`
