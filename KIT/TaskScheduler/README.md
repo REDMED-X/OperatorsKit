@@ -27,19 +27,19 @@ This tool can be used to create or delete a scheduled task. It supports multiple
 * `userID`: Specify the user for which the trigger is set in format: "DOMAIN\username" for domain users, "username" for local system users and "" for all users (requires admin privs if set for another user or all users).
 
 ## Usage
-`taskscheduler create <taskName> <programPath> "<(optional) programArguments>" onetime <startTime>`
-`taskscheduler create <taskName> <programPath> "<(optional) programArguments>" daily <startTime> <(optional) expireTime> <(optional) daysInterval> <(optional) delay>`
-`taskscheduler create <taskName> <programPath> "<(optional) programArguments>" logon <(optional) userID>`
-`taskscheduler create <taskName> <programPath> "<(optional) programArguments>" startup <(optional) delay>`
-`taskscheduler create <taskName> <programPath> "<(optional) programArguments>" lock <(optional) userID> <(optional) delay>`
-`taskscheduler create <taskName> <programPath> "<(optional) programArguments>" unlock <(optional) userID> <(optional) delay>`
-`taskscheduler delete <taskName>`
+* `taskscheduler create <taskName> <programPath> "<(optional) programArguments>" onetime <startTime>`
+* `taskscheduler create <taskName> <programPath> "<(optional) programArguments>" daily <startTime> <(optional) expireTime> <(optional) daysInterval> <(optional) delay>`
+* `taskscheduler create <taskName> <programPath> "<(optional) programArguments>" logon <(optional) userID>`
+* `taskscheduler create <taskName> <programPath> "<(optional) programArguments>" startup <(optional) delay>`
+* `taskscheduler create <taskName> <programPath> "<(optional) programArguments>" lock <(optional) userID> <(optional) delay>`
+* `taskscheduler create <taskName> <programPath> "<(optional) programArguments>" unlock <(optional) userID> <(optional) delay>`
+* `taskscheduler delete <taskName>`
 
 ## Examples
-`taskscheduler create TestTask C:\Windows\System32\cmd.exe "/c C:\Windows\System32\calc.exe" daily 2023-03-24T12:08:00 2023-03-28T12:14:00 1 PT2H`
-`taskscheduler create NewTask C:\Users\Public\Downloads\legit.exe "" logon Testdomain\Administrator`
-`taskscheduler create OneDrive C:\Data\OneDrive.exe "" unlock "" PT5M`
-`taskscheduler delete TestTask`
+* `taskscheduler create TestTask C:\Windows\System32\cmd.exe "/c C:\Windows\System32\calc.exe" daily 2023-03-24T12:08:00 2023-03-28T12:14:00 1 PT2H`
+* `taskscheduler create NewTask C:\Users\Public\Downloads\legit.exe "" logon Testdomain\Administrator`
+* `taskscheduler create OneDrive C:\Data\OneDrive.exe "" unlock "" PT5M`
+* `taskscheduler delete TestTask`
 
 ## Compile
 - 1\. Make sure Visual Studio is installed and supports C/C++.
