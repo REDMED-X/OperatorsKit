@@ -1,25 +1,26 @@
 # author REDMED-X
 
 beacon_command_register(
-	"taskscheduler", "Create or delete a scheduled task.\n",
-	"INFO:\nCreate or delete a scheduled task.\n\n" .
-	"BASIC PARAMETERS:\n[create]: Indicate that you want to create a new scheduled task.\n[delete]: Indicate that you want to delete an existing scheduled task.\n[taskName]: The name of the scheduled task.\n[programPath]: Path to the program that you want to run like: C:\\Windows\\System32\\cmd.exe.\n[programArguments]: Arguments that you want to pass to the program like: \"/c C:\\Windows\\System32\\calc.exe\" or \"\" to leave it empty.\n[triggerType]: The trigger that signals the execution like: onetime, daily, logon, startup, lock, unlock. For more information, check the TRIGGER OPTIONS below.\n\n" .
+	"taskscheduler", "Create or delete a scheduled task (local and remote support).",
+	"INFO:\nCreate or delete a scheduled task on the current system or a remote host.\n\n" .
+	"BASIC ARGUMENTS:\n[create]: Indicate that you want to create a new scheduled task.\n[delete]: Indicate that you want to delete an existing scheduled task.\n[taskName]: The name of the scheduled task.\n[hostName]: The FQDN of the remote host or \"\" for the current system.\n[programPath]: Path to the program that you want to run like: C:\\Windows\\System32\\cmd.exe.\n[programArguments]: Arguments that you want to pass to the program like: \"/c C:\\Windows\\System32\\calc.exe\" or \"\" to leave it empty.\n[triggerType]: The trigger that signals the execution like: onetime, daily, logon, startup, lock, unlock. For more information, check the TRIGGER OPTIONS below.\n\n" .
 	"TRIGGER OPTIONS:\n[onetime]: Create task with trigger \"On a schedule one time\".\n[daily]: Create task with trigger \"On a schedule daily.\"\n[logon]: Create task with trigger \"At log on\" (requires admin privs if set for another user or all users).\n[startup]: Create task with trigger \"At startup\" (requires admin privs).\n[lock]: Create task with trigger \"On workstation lock\" (requires admin privs if set for another user or all users).\n[unlock]: Create task with trigger \"On workstation unlock\" (requires admin privs if set for another user or all users).\n\n" .
-	"TRIGGER SPECIFIC PARAMETERS:\n[startTime]: Start time of the trigger in format: 2023-03-24T12:08:00.\n[expireTime]: Expiration time of the trigger in format: 2023-03-24T12:08:00.\n[daysInterval]: Interval in number of days. For example: 1 or 3.\n[delay]: Random time delay after the start time in which the trigger is hit. Use format \"PT2H\" for hours and \"PT15M\" for minutes.\n[userID]: Specify the user for which the trigger is set in format: \"DOMAIN\\username\" for domain users, \"username\" for local system users and \"\" for all users (requires admin privs if set for another user or all users).\n\n" .
-	"USAGE:\ntaskscheduler create <taskName> <programPath> \"<(optional) programArguments>\" onetime <startTime>\ntaskscheduler create <taskName> <programPath> \"<(optional) programArguments>\" daily <startTime> <(optional) expireTime> <(optional) daysInterval> <(optional) delay>\ntaskscheduler create <taskName> <programPath> \"<(optional) programArguments>\" logon <(optional) userID>\ntaskscheduler create <taskName> <programPath> \"<(optional) programArguments>\" startup <(optional) delay>\ntaskscheduler create <taskName> <programPath> \"<(optional) programArguments>\" lock <(optional) userID> <(optional) delay>\ntaskscheduler create <taskName> <programPath> \"<(optional) programArguments>\" unlock <(optional) userID> <(optional) delay>\ntaskscheduler delete <taskName>\n\n" .
-	"EXAMPLES:\ntaskscheduler create TestTask C:\\Windows\\System32\\cmd.exe \"/c C:\\Windows\\System32\\calc.exe\" daily 2023-03-24T12:08:00 2023-03-28T12:14:00 1 PT2H\ntaskscheduler create NewTask C:\\Users\\Public\\Downloads\\legit.exe \"\" logon Testdomain\\Administrator\ntaskscheduler create OneDrive C:\\Data\\OneDrive.exe \"\" unlock \"\" PT5M\ntaskscheduler delete TestTask\n\n");
+	"TRIGGER SPECIFIC ARGUMENTS:\n[startTime]: Start time of the trigger in format: 2023-03-24T12:08:00.\n[expireTime]: Expiration time of the trigger in format: 2023-03-24T12:08:00.\n[daysInterval]: Interval in number of days. For example: 1 or 3.\n[delay]: Random time delay after the start time in which the trigger is hit. Use format \"PT2H\" for hours and \"PT15M\" for minutes.\n[userID]: Specify the user for which the trigger is set in format: \"DOMAIN\\username\" for domain users, \"username\" for local system users and \"\" for all users (requires admin privs if set for another user or all users).\n\n" .
+	"USAGE:\ntaskscheduler create <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" onetime <startTime>\ntaskscheduler create <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" daily <startTime> <(optional) expireTime> <(optional) daysInterval> <(optional) delay>\ntaskscheduler create <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" logon <(optional) userID>\ntaskscheduler create <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" startup <(optional) delay>\ntaskscheduler create <taskName> <programPath> \"<(optional) programArguments>\" lock <(optional) userID> <(optional) delay>\ntaskscheduler create <taskName> <programPath> \"<(optional) programArguments>\" unlock <(optional) userID> <(optional) delay>\ntaskscheduler delete <taskName>\n\n" .
+	"EXAMPLES:\ntaskscheduler create TestTask \"\" C:\\Windows\\System32\\cmd.exe \"/c C:\\Windows\\System32\\calc.exe\" daily 2023-03-24T12:08:00 2023-03-28T12:14:00 1 PT2H\ntaskscheduler create NewTask DB01.example.local C:\\Users\\Public\\Downloads\\legit.exe \"\" logon Testdomain\\Administrator\ntaskscheduler create OneDrive \"\" C:\\Data\\OneDrive.exe \"\" unlock \"\" PT5M\ntaskscheduler delete TestTask DB01.example.local\n\n");
 	
 alias taskscheduler {
     $bid = $1;
     $action = $2;
 	$taskName = $3; 
-    $programPath = $4;
-    $programArguments = $5;
-	$triggerType = $6; 
-	$optionalArg1 = $7;
-	$optionalArg2 = $8;
-	$optionalArg3 = $9;
-	$optionalArg4 = $10;
+	$host = $4; 
+    $programPath = $5;
+    $programArguments = $6;
+	$triggerType = $7; 
+	$optionalArg1 = $8;
+	$optionalArg2 = $9;
+	$optionalArg3 = $10;
+	$optionalArg4 = $11;
 
 
 	# Verify user input
@@ -79,28 +80,28 @@ alias taskscheduler {
 
 	# Pack our arguments
 	if ($action eq "delete") {
-       $arg_data  = bof_pack($bid, "zZ", $action, $taskName);
+       $arg_data  = bof_pack($bid, "zZZ", $action, $taskName, $host);
 	   blog($bid, "Tasked to delete scheduled task..");
     }
 	else {
 		blog($bid, "Tasked to create scheduled task..");
 		if ($triggerType eq "onetime") {
-			$arg_data  = bof_pack($bid, "zZZZzZ", $action, $taskName, $programPath, $programArguments, $triggerType, $optionalArg1);
+			$arg_data  = bof_pack($bid, "zZZZZzZ", $action, $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1);
 		}
 		if ($triggerType eq "daily") {
-			$arg_data  = bof_pack($bid, "zZZZzZZiZ", $action, $taskName, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2, $optionalArg3, $optionalArg4);
+			$arg_data  = bof_pack($bid, "zZZZZzZZiZ", $action, $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2, $optionalArg3, $optionalArg4);
 		}
 		if ($triggerType eq "logon") {
-			$arg_data  = bof_pack($bid, "zZZZzZ", $action, $taskName, $programPath, $programArguments, $triggerType, $optionalArg1);
+			$arg_data  = bof_pack($bid, "zZZZZzZ", $action, $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1);
 		}
 		if ($triggerType eq "startup") {
-			$arg_data  = bof_pack($bid, "zZZZzZ", $action, $taskName, $programPath, $programArguments, $triggerType, $optionalArg1);
+			$arg_data  = bof_pack($bid, "zZZZZzZ", $action, $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1);
 		}
 		if ($triggerType eq "lock") {
-			$arg_data  = bof_pack($bid, "zZZZzZZ", $action, $taskName, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2);
+			$arg_data  = bof_pack($bid, "zZZZZzZZ", $action, $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2);
 		}
 		if ($triggerType eq "unlock") {
-			$arg_data  = bof_pack($bid, "zZZZzZZ", $action, $taskName, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2);
+			$arg_data  = bof_pack($bid, "zZZZZzZZ", $action, $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2);
 		}
 	}
 	

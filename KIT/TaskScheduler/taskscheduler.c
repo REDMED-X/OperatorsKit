@@ -173,7 +173,7 @@ HRESULT SetUnlockTask(HRESULT hr, ITriggerCollection* pTriggerCollection, wchar_
 }
 
 
-BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t* programPath, wchar_t* programArguments, wchar_t* startTime, wchar_t* expireTime, int daysInterval, wchar_t* delay, wchar_t* userID) {
+BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, wchar_t* programPath, wchar_t* programArguments, wchar_t* startTime, wchar_t* expireTime, int daysInterval, wchar_t* delay, wchar_t* userID) {
     BOOL actionResult = FALSE;
 	HRESULT hr = S_OK;
 
@@ -190,12 +190,14 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t* programP
         return actionResult;
     }
 	
-	//Vserver can hold remote host > Requires further testing
-	VARIANT Vserver;
+	VARIANT Vhost;
 	VARIANT VNull;
-	OLEAUT32$VariantInit(&Vserver);
+	OLEAUT32$VariantInit(&Vhost);
 	OLEAUT32$VariantInit(&VNull);
-	hr = pTaskService->lpVtbl->Connect(pTaskService, Vserver, VNull, VNull, VNull); 
+	Vhost.vt = VT_BSTR;
+	Vhost.bstrVal = OLEAUT32$SysAllocString(host);
+	
+	hr = pTaskService->lpVtbl->Connect(pTaskService, Vhost, VNull, VNull, VNull); 
     if (FAILED(hr)) {
         //MSVCRT$printf("ITaskService::Connect failed: %x\n", hr); //DEBUG
         pTaskService->lpVtbl->Release(pTaskService);
@@ -355,7 +357,7 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t* programP
     pTaskFolder->lpVtbl->Release(pTaskFolder);
 	pTaskService->lpVtbl->Release(pTaskService);
 	
-	OLEAUT32$VariantClear(&Vserver);
+	OLEAUT32$VariantClear(&Vhost);
 	OLEAUT32$VariantClear(&VNull);
 	OLE32$CoUninitialize();
 
@@ -363,7 +365,7 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t* programP
 }
 
 
-BOOL DeleteScheduledTask(wchar_t* taskName) {
+BOOL DeleteScheduledTask(wchar_t* taskName, wchar_t* host) {
     BOOL actionResult = FALSE;
 	HRESULT hr = S_OK;
 
@@ -380,12 +382,14 @@ BOOL DeleteScheduledTask(wchar_t* taskName) {
         return actionResult;
     }
 	
-	VARIANT Vserver;
+	VARIANT Vhost;
 	VARIANT VNull;
-	OLEAUT32$VariantInit(&Vserver);
+	OLEAUT32$VariantInit(&Vhost);
 	OLEAUT32$VariantInit(&VNull);
+	Vhost.vt = VT_BSTR;
+	Vhost.bstrVal = OLEAUT32$SysAllocString(host);
 	
-	hr = pTaskService->lpVtbl->Connect(pTaskService, Vserver, VNull, VNull, VNull);
+	hr = pTaskService->lpVtbl->Connect(pTaskService, Vhost, VNull, VNull, VNull); 
     if (FAILED(hr)) {
         //MSVCRT$printf("ITaskService::Connect failed: %x\n", hr); //DEBUG
         pTaskService->lpVtbl->Release(pTaskService);
@@ -417,7 +421,7 @@ BOOL DeleteScheduledTask(wchar_t* taskName) {
     pTaskFolder->lpVtbl->Release(pTaskFolder);
 	pTaskService->lpVtbl->Release(pTaskService);
 	
-	OLEAUT32$VariantClear(&Vserver);
+	OLEAUT32$VariantClear(&Vhost);
 	OLEAUT32$VariantClear(&VNull);
 	OLE32$CoUninitialize();
 
@@ -441,10 +445,12 @@ int go(char *args, int len) {
 	int daysInterval = 0; 
 	WCHAR *delay = L"";
 	WCHAR *userID  = L""; 
+	WCHAR *hostName  = L""; 
 	
 	BeaconDataParse(&parser, args, len);
 	action = BeaconDataExtract(&parser, NULL);
 	taskName = BeaconDataExtract(&parser, NULL);
+	hostName = BeaconDataExtract(&parser, NULL);
 
 	if (MSVCRT$strcmp(action, "create") == 0) {
 		
@@ -476,10 +482,10 @@ int go(char *args, int len) {
 			delay = BeaconDataExtract(&parser, NULL);
 		}
 
-		res = CreateScheduledTask(triggerType, taskName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID);
+		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID);
 	}
 	else if (MSVCRT$strcmp(action, "delete") == 0) {
-		res = DeleteScheduledTask(taskName);
+		res = DeleteScheduledTask(taskName, hostName);
 	}
 	else {
 		BeaconPrintf(CALLBACK_ERROR,"Please specify one of the following options: create | delete\n");
