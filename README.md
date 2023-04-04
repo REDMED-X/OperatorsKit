@@ -6,13 +6,13 @@ The following tools are currently in the operators' kit:
 
 |Name|Decription|
 |----|----------|
-|**[AddTaskScheduler](KIT/AddLocalCert)**|Add a (self signed) certificate to a specific local computer certificate store.|
+|**[AddLocalCert](KIT/AddLocalCert)**|Add a (self signed) certificate to a specific local computer certificate store.|
 |**[AddTaskScheduler](KIT/AddTaskScheduler)**|Create a scheduled task on the current- or remote host.|
 |**[BlindEventlog](KIT/BlindEventlog)**|Blind Eventlog by suspending its threads.|
 |**[DelLocalCert](KIT/DelLocalCert)**|Delete a local computer certificate from a specific store.|
 |**[DelTaskScheduler](KIT/DelTaskScheduler)**|Delete a scheduled task on the current- or a remote host.|
 |**[DllEnvHijacking](KIT/DllEnvHijacking)**|BOF implementation of DLL environment hijacking published by [Wietze](https://www.wietzebeukema.nl/blog/save-the-environment-variables) |
-|**[EnumLocalCert](KIT/DelLocalCert)**|List all local computer certificates from a specific store.|
+|**[EnumLocalCert](KIT/EnumLocalCert)**|List all local computer certificates from a specific store.|
 |**[FindDotnet](KIT/FindDotnet)**|Find processes that most likely have .NET loaded.|
 |**[FindHandle](KIT/FindHandle)**|Find "process" and "thread" handle types between processes.|
 |**[FindLib](KIT/FindLib)**|Find loaded module(s) in remote process(es).|
