@@ -1,11 +1,9 @@
-# TaskScheduler
-This tool can be used to create or delete a scheduled task on the current system or a remote host. It supports multiple trigger options. 
+# AddTaskScheduler
+This tool can be used to create a scheduled task on the current system or a remote host. It supports multiple trigger options. 
 
 >As a rule of thumb, setting a scheduled task for any user but yourself, requires elevated privileges. Furthermore, the tool returns error codes if the operation fails. The most common error codes are: 80070005 (not enough privileges), 80041318/80041319 (most likely you made a typo in one of the input fields), and 80070002 (scheduled task doesn't exist). 
 
 ## Basic parameters
-* `create`: Indicate that you want to create a new scheduled task.
-* `delete`: Indicate that you want to delete an existing scheduled task.
 * `taskName`: The name of the scheduled task.
 * `hostName`: Specify `""` for the current system or the FQDN of the remote host: `DB01.example.local`. 
 * `programPath`: Path to the program that you want to run like: `C:\Windows\System32\cmd.exe`.
@@ -26,21 +24,20 @@ This tool can be used to create or delete a scheduled task on the current system
 * `daysInterval`: Interval in number of days. For example: `1` or `3`.
 * `delay`: Random time delay after the start time in which the trigger is hit. Use format `PT2H` for hours and `PT15M` for minutes.
 * `userID`: Specify the user for which the trigger is set in format: `"DOMAIN\username"` for domain users, `username` for local system users and `""` for all users (requires admin privs if set for another user or all users).
+* `repeatTask`: Set "Repeat task every x minutes/hours" option in format `PT2H` with a duration of `Indefinitely`.
 
 ## Usage
-* `taskscheduler create <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" onetime <startTime>`
-* `taskscheduler create <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" daily <startTime> <(optional) expireTime> <(optional) daysInterval> <(optional) delay>`
-* `taskscheduler create <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" logon <(optional) userID>`
-* `taskscheduler create <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" startup <(optional) delay>`
-* `taskscheduler create <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" lock <(optional) userID> <(optional) delay>`
-* `taskscheduler create <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" unlock <(optional) userID> <(optional) delay>`
-* `taskscheduler delete <taskName> <(optional) hostName>`
+* `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" onetime <startTime> <(optional) repeatTask>`
+* `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" daily <startTime> <(optional) expireTime> <(optional) daysInterval> <(optional) delay>`
+* `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" logon <(optional) userID>`
+* `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" startup <(optional) delay>`
+* `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" lock <(optional) userID> <(optional) delay>`
+* `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" unlock <(optional) userID> <(optional) delay>`
 
 ## Examples
-* `taskscheduler create TestTask "" C:\Windows\System32\cmd.exe "/c C:\Windows\System32\calc.exe" daily 2023-03-24T12:08:00 2023-03-28T12:14:00 1 PT2H`
-* `taskscheduler create NewTask DB01.example.local C:\Users\Public\Downloads\legit.exe "" logon Testdomain\Administrator`
-* `taskscheduler create OneDrive "" C:\Data\OneDrive.exe "" unlock "" PT5M`
-* `taskscheduler delete TestTask DB01.example.local`
+* `addtaskscheduler TestTask "" C:\Windows\System32\cmd.exe "/c C:\Windows\System32\calc.exe" daily 2023-03-24T12:08:00 2023-03-28T12:14:00 1 PT2H`
+* `addtaskscheduler NewTask DB01.example.local C:\Users\Public\Downloads\legit.exe "" logon Testdomain\Administrator`
+* `addtaskscheduler OneDrive "" C:\Data\OneDrive.exe "" unlock "" PT5M`
 
 ## Compile
 - 1\. Make sure Visual Studio is installed and supports C/C++.

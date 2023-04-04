@@ -1,0 +1,92 @@
+# author REDMED-X
+
+beacon_command_register(
+	"addtaskscheduler", "Create a scheduled task (local and remote system support).",
+	"INFO:\nCreate a scheduled task on the current system or a remote host.\n\n" .
+	"BASIC ARGUMENTS:\n[taskName]: The name of the scheduled task.\n[hostName]: The FQDN of the remote host or \"\" for the current system.\n[programPath]: Path to the program that you want to run like: C:\\Windows\\System32\\cmd.exe.\n[programArguments]: Arguments that you want to pass to the program like: \"/c C:\\Windows\\System32\\calc.exe\" or \"\" to leave it empty.\n[triggerType]: The trigger that signals the execution like: onetime, daily, logon, startup, lock, unlock. For more information, check the TRIGGER OPTIONS below.\n\n" .
+	"TRIGGER OPTIONS:\n[onetime]: Create task with trigger \"On a schedule one time\".\n[daily]: Create task with trigger \"On a schedule daily.\"\n[logon]: Create task with trigger \"At log on\" (requires admin privs if set for another user or all users).\n[startup]: Create task with trigger \"At startup\" (requires admin privs).\n[lock]: Create task with trigger \"On workstation lock\" (requires admin privs if set for another user or all users).\n[unlock]: Create task with trigger \"On workstation unlock\" (requires admin privs if set for another user or all users).\n\n" .
+	"TRIGGER SPECIFIC ARGUMENTS:\n[startTime]: Start time of the trigger in format: 2023-03-24T12:08:00.\n[expireTime]: Expiration time of the trigger in format: 2023-03-24T12:08:00.\n[daysInterval]: Interval in number of days. For example: 1 or 3.\n[delay]: Random time delay after the start time in which the trigger is hit. Use format \"PT2H\" for hours and \"PT15M\" for minutes.\n[userID]: Specify the user for which the trigger is set in format: \"DOMAIN\\username\" for domain users, \"username\" for local system users and \"\" for all users (requires admin privs if set for another user or all users).\n[repeatTask]: Set \"Repeat task every x minutes/hours\" option in format \"PT2H\" with a duration of \"Indefinitely\".\n\n" .
+	"USAGE:\naddtaskscheduler <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" onetime <startTime> <(optional) repeatTask>\naddtaskscheduler <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" daily <startTime> <(optional) expireTime> <(optional) daysInterval> <(optional) delay>\naddtaskscheduler <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" logon <(optional) userID>\naddtaskscheduler <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" startup <(optional) delay>\naddtaskscheduler <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" lock <(optional) userID> <(optional) delay>\naddtaskscheduler <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" unlock <(optional) userID> <(optional) delay>\n\n" .
+	"EXAMPLES:\naddtaskscheduler TestTask \"\" C:\\Windows\\System32\\cmd.exe \"/c C:\\Windows\\System32\\calc.exe\" daily 2023-03-24T12:08:00 2023-03-28T12:14:00 1 PT2H\naddtaskscheduler NewTask DB01.example.local C:\\Users\\Public\\Downloads\\legit.exe \"\" logon Testdomain\\Administrator\naddtaskscheduler OneDrive \"\" C:\\Data\\OneDrive.exe \"\" unlock \"\" PT5M\n\n");
+	
+alias addtaskscheduler {
+    $bid = $1;
+	$taskName = $2; 
+	$host = $3; 
+    $programPath = $4;
+    $programArguments = $5;
+	$triggerType = $6; 
+	$optionalArg1 = $7;
+	$optionalArg2 = $8;
+	$optionalArg3 = $9;
+	$optionalArg4 = $10;
+
+
+	# Verify user input
+	if ($taskName eq "") {
+		berror($bid, "Please specify a name for the new scheduled task.\n");
+		return;
+	}
+	
+	if ($programPath eq "") {
+		berror($bid, "Please specify the path to the program that you want to run\n");
+		return;
+	}
+	
+	if ($triggerType eq "") {
+		berror($bid, "Please specify one of the following trigger options: onetime | daily | logon | startup | lock | unlock\n");
+		return;
+	}
+	
+	if ($triggerType eq "onetime" || $triggerType eq "daily" || $triggerType eq "logon" || $triggerType eq "startup" || $triggerType eq "lock" || $triggerType eq "unlock") {
+		if ($triggerType eq "onetime") {
+			if ($optionalArg1 eq "") {
+				berror($bid, "Please specify the start time of the task in the following format: 2023-03-24T12:08:00.\n");
+				return;
+			}
+		}
+		if ($triggerType eq "daily") {
+			if ($optionalArg1 eq "") {
+				berror($bid, "Please specify the start time of the task in the following format: 2023-03-24T12:08:00.\n");
+				return;
+			}
+		}
+	}
+	else {
+		berror($bid, "This trigger option is not supported. Please select one of the following options: onetime | daily | logon | startup | lock | unlock\n");
+		return;
+	}
+	
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("addtaskscheduler.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+
+	if ($triggerType eq "onetime") {
+		$arg_data  = bof_pack($bid, "ZZZZzZZ", $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2);
+	}
+	if ($triggerType eq "daily") {
+		$arg_data  = bof_pack($bid, "ZZZZzZZiZ", $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2, $optionalArg3, $optionalArg4);
+	}
+	if ($triggerType eq "logon") {
+		$arg_data  = bof_pack($bid, "ZZZZzZ", $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1);
+	}
+	if ($triggerType eq "startup") {
+		$arg_data  = bof_pack($bid, "ZZZZzZ", $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1);
+	}
+	if ($triggerType eq "lock") {
+		$arg_data  = bof_pack($bid, "ZZZZzZZ", $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2);
+	}
+	if ($triggerType eq "unlock") {
+		$arg_data  = bof_pack($bid, "ZZZZzZZ", $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2);
+	}
+
+	blog($bid, "Tasked to create scheduled task..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+
+}
+
+
+

@@ -1,0 +1,38 @@
+# author REDMED-X
+
+beacon_command_register(
+	"dellocalcert", "Delete a local computer certificate from a specific store.",
+	"INFO:\nDelete a local computer certificate from a specified store based on its unique thumbprint.\n\n" . 
+	"ARGUMENTS:\n[<store name>]: the name of the certificate store from which to delete the certificate.\n[<thumbprint>]: the thumbprint of the certificate that you want to delete in format (all caps): AABBCCDDEEFF00112233445566778899AABBCCDD.\n\n" .
+	"USAGE:\ndellocalcert <store name> <thumbprint>\n\n" .
+	"EXAMPLES:\ndellocalcert ROOT AABBCCDDEEFF00112233445566778899AABBCCDD\n\n");
+	
+
+alias dellocalcert {
+    $bid = $1;
+	$store = $2;
+    $thumbprint = $3;
+	
+	if ($store eq "") {
+		berror($bid, "Please specify a valid local computer certificate store name like ROOT.\n");
+		return;
+	}
+
+	if ($thumbprint eq "") {
+		berror($bid, "Please specify the thumbprint for the certificate that you want to delete from the store.\n");
+		return;
+	}
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("dellocalcert.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data  = bof_pack($bid, "Zz", $store, $thumbprint);
+
+	blog($bid, "Tasked to delete a certificate..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+

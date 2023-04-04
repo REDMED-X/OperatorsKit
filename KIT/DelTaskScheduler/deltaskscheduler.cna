@@ -1,0 +1,35 @@
+# author REDMED-X
+
+beacon_command_register(
+	"deltaskscheduler", "Delete a scheduled task (local and remote support).",
+	"INFO:\nDelete a scheduled task on the current system or a remote host.\n\n" .
+	"ARGUMENTS:\n[taskName]: The name of the scheduled task.\n[hostName]: The FQDN of the remote host or leave empty for the current system.\n\n" .
+	"USAGE:\ndeltaskscheduler <taskName> <(optional) hostName>\n\n" .
+	"EXAMPLES:\ndeltaskscheduler TestTask\ndeltaskscheduler TestTask DB01.example.local\n\n");
+	
+alias deltaskscheduler {
+    $bid = $1;
+	$taskName = $2; 
+	$host = $3; 
+
+	# Verify user input
+	if ($taskName eq "") {
+		berror($bid, "Please specify the name of the scheduled task that you want to delete.\n");
+		return;
+	}
+		
+    # Read in the right BOF file
+    $handle = openf(script_resource("deltaskscheduler.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data = bof_pack($bid, "ZZ", $taskName, $host);
+    blog($bid, "Tasked to delete scheduled task..");
+
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+
+}
+
+
+

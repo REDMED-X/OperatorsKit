@@ -2,30 +2,46 @@
 #include <windows.h>
 #include <taskschd.h>
 #include <combaseapi.h>
-#include "taskscheduler.h"
+#include "addtaskscheduler.h"
 #include "beacon.h"
 
 
-HRESULT SetOneTimeTask(HRESULT hr, ITriggerCollection* pTriggerCollection, wchar_t* startTime) {
-	IID IIDITimeTrigger = {0xb45747e0, 0xeba7, 0x4276, {0x9f, 0x29, 0x85, 0xc5, 0xbb, 0x30, 0x00, 0x06}}; 
-	ITrigger* pTrigger = NULL;
-	
-	hr = pTriggerCollection->lpVtbl->Create(pTriggerCollection, TASK_TRIGGER_TIME, &pTrigger);
-	if (SUCCEEDED(hr)) {
-		ITimeTrigger* pTimeTrigger = NULL;
-		
-		hr = pTrigger->lpVtbl->QueryInterface(pTrigger, &IIDITimeTrigger, (void**)&pTimeTrigger);
-		if (SUCCEEDED(hr)) {
-			BSTR startTimeBstr = OLEAUT32$SysAllocString(startTime);
-			pTimeTrigger->lpVtbl->put_StartBoundary(pTimeTrigger, startTimeBstr);
-			OLEAUT32$SysFreeString(startTimeBstr);
-			pTimeTrigger->lpVtbl->Release(pTimeTrigger);
-		}
-		pTrigger->lpVtbl->Release(pTrigger);
-	}
-	pTriggerCollection->lpVtbl->Release(pTriggerCollection);
+HRESULT SetOneTimeTask(HRESULT hr, ITriggerCollection* pTriggerCollection, wchar_t* startTime, wchar_t* repeatTask) {
+    IID IIDITimeTrigger = {0xb45747e0, 0xeba7, 0x4276, {0x9f, 0x29, 0x85, 0xc5, 0xbb, 0x30, 0x00, 0x06}};
+    ITrigger* pTrigger = NULL;
 
-	return hr;
+    hr = pTriggerCollection->lpVtbl->Create(pTriggerCollection, TASK_TRIGGER_TIME, &pTrigger);
+    if (SUCCEEDED(hr)) {
+        ITimeTrigger* pTimeTrigger = NULL;
+
+        hr = pTrigger->lpVtbl->QueryInterface(pTrigger, &IIDITimeTrigger, (void**)&pTimeTrigger);
+        if (SUCCEEDED(hr)) {
+            BSTR startTimeBstr = OLEAUT32$SysAllocString(startTime);
+            pTimeTrigger->lpVtbl->put_StartBoundary(pTimeTrigger, startTimeBstr);
+
+            IRepetitionPattern* pRepetitionPattern = NULL;
+            hr = pTimeTrigger->lpVtbl->get_Repetition(pTimeTrigger, &pRepetitionPattern);
+            if (SUCCEEDED(hr)) {
+                BSTR repeatTaskBstr = OLEAUT32$SysAllocString(repeatTask); 
+                BSTR durationBstr = OLEAUT32$SysAllocString(L"");  // Indefinite duration
+
+                pRepetitionPattern->lpVtbl->put_Interval(pRepetitionPattern, repeatTaskBstr);
+                pRepetitionPattern->lpVtbl->put_Duration(pRepetitionPattern, durationBstr);
+                pRepetitionPattern->lpVtbl->Release(pRepetitionPattern);
+
+                OLEAUT32$SysFreeString(repeatTaskBstr);
+                OLEAUT32$SysFreeString(durationBstr);
+            }
+
+            pTimeTrigger->lpVtbl->put_Repetition(pTimeTrigger, pRepetitionPattern);
+            OLEAUT32$SysFreeString(startTimeBstr);
+            pTimeTrigger->lpVtbl->Release(pTimeTrigger);
+        }
+        pTrigger->lpVtbl->Release(pTrigger);
+    }
+    pTriggerCollection->lpVtbl->Release(pTriggerCollection);
+
+    return hr;
 }
 
 
@@ -173,7 +189,7 @@ HRESULT SetUnlockTask(HRESULT hr, ITriggerCollection* pTriggerCollection, wchar_
 }
 
 
-BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, wchar_t* programPath, wchar_t* programArguments, wchar_t* startTime, wchar_t* expireTime, int daysInterval, wchar_t* delay, wchar_t* userID) {
+BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, wchar_t* programPath, wchar_t* programArguments, wchar_t* startTime, wchar_t* expireTime, int daysInterval, wchar_t* delay, wchar_t* userID, wchar_t* repeatTask) {
     BOOL actionResult = FALSE;
 	HRESULT hr = S_OK;
 
@@ -186,7 +202,6 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
     hr = OLE32$CoCreateInstance(&CTaskScheduler, NULL, CLSCTX_INPROC_SERVER, &IIDITaskService, (void**)&pTaskService);
     if (FAILED(hr)) {
 		//MSVCRT$printf("Failed to create ITaskService: %x\n", hr); //DEBUG
-        OLE32$CoUninitialize();
         return actionResult;
     }
 	
@@ -200,9 +215,7 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 	hr = pTaskService->lpVtbl->Connect(pTaskService, Vhost, VNull, VNull, VNull); 
     if (FAILED(hr)) {
         //MSVCRT$printf("ITaskService::Connect failed: %x\n", hr); //DEBUG
-        pTaskService->lpVtbl->Release(pTaskService);
-        OLE32$CoUninitialize();
-        return actionResult;
+		goto cleanup;
     }
 	
 	ITaskFolder* pTaskFolder = NULL;
@@ -210,21 +223,14 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 	hr = pTaskService->lpVtbl->GetFolder(pTaskService, folderPathBstr, &pTaskFolder);
 	if (FAILED(hr)) {
 		//MSVCRT$printf("ITaskService::GetFolder failed: %x\n", hr); //DEBUG
-		pTaskService->lpVtbl->Release(pTaskService);
-		OLE32$CoUninitialize();
-		OLEAUT32$SysFreeString(folderPathBstr);
-		return actionResult;
+		goto cleanup;
 	}
 	OLEAUT32$SysFreeString(folderPathBstr);
 
     ITaskDefinition* pTaskDefinition = NULL;
     hr = pTaskService->lpVtbl->NewTask(pTaskService, 0, &pTaskDefinition);
     if (FAILED(hr)) {
-        //MSVCRT$printf("ITaskService::NewTask failed: %x\n", hr); //DEBUG
-        pTaskFolder->lpVtbl->Release(pTaskFolder);
-        pTaskService->lpVtbl->Release(pTaskService);
-        OLE32$CoUninitialize();
-        return actionResult;
+		goto cleanup;
     }
 	
     IPrincipal* pPrincipal = NULL;
@@ -238,16 +244,12 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
     hr = pTaskDefinition->lpVtbl->get_Triggers(pTaskDefinition, &pTriggerCollection);
     if (FAILED(hr)) {
         //MSVCRT$printf("ITaskDefinition::get_Triggers failed: %x\n", hr); //DEBUG
-        pTaskDefinition->lpVtbl->Release(pTaskDefinition);
-        pTaskFolder->lpVtbl->Release(pTaskFolder);
-        pTaskService->lpVtbl->Release(pTaskService);
-        OLE32$CoUninitialize();
-        return actionResult;
+		goto cleanup;
     }
 
 	//trigger options
 	if (MSVCRT$strcmp(triggerType, "onetime") == 0) {
-		hr = SetOneTimeTask(hr, pTriggerCollection, startTime);
+		hr = SetOneTimeTask(hr, pTriggerCollection, startTime, repeatTask);
 	} else if (MSVCRT$strcmp(triggerType, "daily") == 0) {
 		hr = SetDailyTask(hr, pTriggerCollection, startTime, expireTime, daysInterval, delay); 
 	} else if (MSVCRT$strcmp(triggerType, "logon") == 0) {
@@ -261,63 +263,32 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 	} 
 	else {
 		//MSVCRT$printf("[-] [%ls] is not a supported trigger type\n", triggerType); //DEBUG
-		pTaskDefinition->lpVtbl->Release(pTaskDefinition);
-        pTaskFolder->lpVtbl->Release(pTaskFolder);
-        pTaskService->lpVtbl->Release(pTaskService);
-        OLE32$CoUninitialize();
-		return actionResult;
+		goto cleanup;
 	}
 	
 	IActionCollection* pActionCollection = NULL;
     hr = pTaskDefinition->lpVtbl->get_Actions(pTaskDefinition, &pActionCollection);
     if (FAILED(hr)) {
-        //MSVCRT$printf("ITaskDefinition::get_Actions failed: %x\n", hr); //DEBUG
-        pTaskDefinition->lpVtbl->Release(pTaskDefinition);
-        pTaskFolder->lpVtbl->Release(pTaskFolder);
-        pTaskService->lpVtbl->Release(pTaskService);
-        OLE32$CoUninitialize();
-        return actionResult;
+		goto cleanup;
     }
 	
     IAction* pAction = NULL;
     hr = pActionCollection->lpVtbl->Create(pActionCollection, TASK_ACTION_EXEC, &pAction);
     if (FAILED(hr)) {
-        //MSVCRT$printf("IActionCollection::Create failed: %x\n", hr); //DEBUG
-        pActionCollection->lpVtbl->Release(pActionCollection);
-        pTaskDefinition->lpVtbl->Release(pTaskDefinition);
-        pTaskFolder->lpVtbl->Release(pTaskFolder);
-        pTaskService->lpVtbl->Release(pTaskService);
-        OLE32$CoUninitialize();
-        return actionResult;
+		goto cleanup;
     }
 
 	IID IIDIExecAction = {0x4c3d624d, 0xfd6b, 0x49a3, {0xb9, 0xb7, 0x09, 0xcb, 0x3c, 0xd3, 0xf0, 0x47}};
     IExecAction* pExecAction = NULL;
     hr = pAction->lpVtbl->QueryInterface(pAction, &IIDIExecAction, (void**)&pExecAction);
     if (FAILED(hr)) {
-        //MSVCRT$printf("IAction::QueryInterface failed: %x\n", hr); //DEBUG
-        pAction->lpVtbl->Release(pAction);
-        pActionCollection->lpVtbl->Release(pActionCollection);
-        pTaskDefinition->lpVtbl->Release(pTaskDefinition);
-        pTaskFolder->lpVtbl->Release(pTaskFolder);
-        pTaskService->lpVtbl->Release(pTaskService);
-        OLE32$CoUninitialize();
-        return actionResult;
+		goto cleanup;
     }
 	
 	BSTR programPathBstr = OLEAUT32$SysAllocString(programPath);
     hr = pExecAction->lpVtbl->put_Path(pExecAction, programPathBstr);
     if (FAILED(hr)) {
-        //MSVCRT$printf("IExecAction::put_Path failed: %x\n", hr); //DEBUG
-        pExecAction->lpVtbl->Release(pExecAction);
-        pAction->lpVtbl->Release(pAction);
-        pActionCollection->lpVtbl->Release(pActionCollection);
-        pTaskDefinition->lpVtbl->Release(pTaskDefinition);
-        pTaskFolder->lpVtbl->Release(pTaskFolder);
-        pTaskService->lpVtbl->Release(pTaskService);
-        OLE32$CoUninitialize();
-		OLEAUT32$SysFreeString(programPathBstr);
-        return actionResult;
+		goto cleanup;
     }
 	OLEAUT32$SysFreeString(programPathBstr);
 	
@@ -325,16 +296,7 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 	BSTR programArgumentsBstr = OLEAUT32$SysAllocString(programArguments);
     hr = pExecAction->lpVtbl->put_Arguments(pExecAction, programArgumentsBstr);
     if (FAILED(hr)) {
-        //MSVCRT$printf("IExecAction::put_Arguments failed: %x\n", hr); //DEBUG
-        pExecAction->lpVtbl->Release(pExecAction);
-        pAction->lpVtbl->Release(pAction);
-        pActionCollection->lpVtbl->Release(pActionCollection);
-        pTaskDefinition->lpVtbl->Release(pTaskDefinition);
-        pTaskFolder->lpVtbl->Release(pTaskFolder);
-        pTaskService->lpVtbl->Release(pTaskService);
-        OLE32$CoUninitialize();
-		OLEAUT32$SysFreeString(programArgumentsBstr);
-        return actionResult;
+		goto cleanup;
     }
 	OLEAUT32$SysFreeString(programArgumentsBstr);
 	
@@ -349,85 +311,31 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
     } else {
         BeaconPrintf(CALLBACK_OUTPUT, "[+] Scheduled task '%ls' created successfully!\n", taskName);
         actionResult = TRUE;
-        pRegisteredTask->lpVtbl->Release(pRegisteredTask);
     }
 	
-    pActionCollection->lpVtbl->Release(pActionCollection);
-    pTaskDefinition->lpVtbl->Release(pTaskDefinition);
-    pTaskFolder->lpVtbl->Release(pTaskFolder);
-	pTaskService->lpVtbl->Release(pTaskService);
-	
-	OLEAUT32$VariantClear(&Vhost);
-	OLEAUT32$VariantClear(&VNull);
-	OLE32$CoUninitialize();
+cleanup:
+    if (pRegisteredTask) {
+        pRegisteredTask->lpVtbl->Release(pRegisteredTask);
+    }
+    if (pActionCollection) {
+        pActionCollection->lpVtbl->Release(pActionCollection);
+    }
+    if (pTaskDefinition) {
+        pTaskDefinition->lpVtbl->Release(pTaskDefinition);
+    }
+    if (pTaskFolder) {
+        pTaskFolder->lpVtbl->Release(pTaskFolder);
+    }
+    if (pTaskService) {
+        pTaskService->lpVtbl->Release(pTaskService);
+    }
+    
+    OLEAUT32$VariantClear(&Vhost);
+    OLEAUT32$VariantClear(&VNull);
+    OLE32$CoUninitialize();
 
 	return actionResult;
 }
-
-
-BOOL DeleteScheduledTask(wchar_t* taskName, wchar_t* host) {
-    BOOL actionResult = FALSE;
-	HRESULT hr = S_OK;
-
-    hr = OLE32$CoInitializeEx(NULL, COINIT_MULTITHREADED);
-    if (FAILED(hr)) return actionResult;
-
-	IID CTaskScheduler = {0x0f87369f, 0xa4e5, 0x4cfc, {0xbd,0x3e,0x73,0xe6,0x15,0x45,0x72,0xdd}};
-	IID IIDITaskService = {0x2faba4c7, 0x4da9, 0x4013, {0x96, 0x97, 0x20, 0xcc, 0x3f, 0xd4, 0x0f, 0x85}};
-	ITaskService *pTaskService = NULL;
-    hr = OLE32$CoCreateInstance(&CTaskScheduler, NULL, CLSCTX_INPROC_SERVER, &IIDITaskService, (void**)&pTaskService);
-    if (FAILED(hr)) {
-        //MSVCRT$printf("Failed to create ITaskService: %x\n", hr); //DEBUG
-        OLE32$CoUninitialize();
-        return actionResult;
-    }
-	
-	VARIANT Vhost;
-	VARIANT VNull;
-	OLEAUT32$VariantInit(&Vhost);
-	OLEAUT32$VariantInit(&VNull);
-	Vhost.vt = VT_BSTR;
-	Vhost.bstrVal = OLEAUT32$SysAllocString(host);
-	
-	hr = pTaskService->lpVtbl->Connect(pTaskService, Vhost, VNull, VNull, VNull); 
-    if (FAILED(hr)) {
-        //MSVCRT$printf("ITaskService::Connect failed: %x\n", hr); //DEBUG
-        pTaskService->lpVtbl->Release(pTaskService);
-        OLE32$CoUninitialize();
-        return actionResult;
-    }
-	
-	ITaskFolder* pTaskFolder = NULL;
-	BSTR folderPathBstr = OLEAUT32$SysAllocString(L"\\");
-	hr = pTaskService->lpVtbl->GetFolder(pTaskService, folderPathBstr, &pTaskFolder);
-	if (FAILED(hr)) {
-		//MSVCRT$printf("ITaskService::GetFolder failed: %x\n", hr); //DEBUG
-		pTaskService->lpVtbl->Release(pTaskService);
-		OLE32$CoUninitialize();
-		OLEAUT32$SysFreeString(folderPathBstr);
-		return actionResult;
-	}
-	OLEAUT32$SysFreeString(folderPathBstr);
-
-    hr = pTaskFolder->lpVtbl->DeleteTask(pTaskFolder, taskName, 0);
-	
-	if (FAILED(hr)) {
-        BeaconPrintf(CALLBACK_ERROR, "Failed to delete the scheduled task with error code: %x\n", hr);
-    } else {
-        BeaconPrintf(CALLBACK_OUTPUT, "[+] Scheduled task '%ls' deleted successfully!\n", taskName);
-        actionResult = TRUE;
-    }
-
-    pTaskFolder->lpVtbl->Release(pTaskFolder);
-	pTaskService->lpVtbl->Release(pTaskService);
-	
-	OLEAUT32$VariantClear(&Vhost);
-	OLEAUT32$VariantClear(&VNull);
-	OLE32$CoUninitialize();
-
-    return actionResult;
-}
-
 
 
 
@@ -435,8 +343,8 @@ int go(char *args, int len) {
 	BOOL res = NULL;
 	datap parser;
 	
-	CHAR *action; //create or delete
     WCHAR *taskName; 
+	WCHAR *hostName  = L""; 
     WCHAR *programPath; 
     WCHAR *programArguments  = L""; 
 	CHAR *triggerType; //onetime, daily, logon , startup, lock, unlock
@@ -445,53 +353,50 @@ int go(char *args, int len) {
 	int daysInterval = 0; 
 	WCHAR *delay = L"";
 	WCHAR *userID  = L""; 
-	WCHAR *hostName  = L""; 
+	WCHAR *repeatTask = L"";
+	
 	
 	BeaconDataParse(&parser, args, len);
-	action = BeaconDataExtract(&parser, NULL);
 	taskName = BeaconDataExtract(&parser, NULL);
 	hostName = BeaconDataExtract(&parser, NULL);
-
-	if (MSVCRT$strcmp(action, "create") == 0) {
-		
-		programPath = BeaconDataExtract(&parser, NULL);
-		programArguments = BeaconDataExtract(&parser, NULL);
-		triggerType = BeaconDataExtract(&parser, NULL);
-		
-		if (MSVCRT$strcmp(triggerType, "onetime") == 0) {
-			startTime = BeaconDataExtract(&parser, NULL);
-		}
-		if (MSVCRT$strcmp(triggerType, "daily") == 0) {
-			startTime = BeaconDataExtract(&parser, NULL);
-			expireTime = BeaconDataExtract(&parser, NULL);
-			daysInterval = BeaconDataInt(&parser);
-			delay = BeaconDataExtract(&parser, NULL);
-		}
-		if (MSVCRT$strcmp(triggerType, "logon") == 0) {
-			userID = BeaconDataExtract(&parser, NULL);
-		}
-		if (MSVCRT$strcmp(triggerType, "startup") == 0) {
-			delay = BeaconDataExtract(&parser, NULL);
-		}
-		if (MSVCRT$strcmp(triggerType, "lock") == 0) {
-			userID = BeaconDataExtract(&parser, NULL);
-			delay = BeaconDataExtract(&parser, NULL);
-		}
-		if (MSVCRT$strcmp(triggerType, "unlock") == 0) {
-			userID = BeaconDataExtract(&parser, NULL);
-			delay = BeaconDataExtract(&parser, NULL);
-		}
-
-		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID);
-	}
-	else if (MSVCRT$strcmp(action, "delete") == 0) {
-		res = DeleteScheduledTask(taskName, hostName);
+	programPath = BeaconDataExtract(&parser, NULL);
+	programArguments = BeaconDataExtract(&parser, NULL);
+	triggerType = BeaconDataExtract(&parser, NULL);
+	
+	if (MSVCRT$strcmp(triggerType, "onetime") == 0) {
+		startTime = BeaconDataExtract(&parser, NULL);
+		repeatTask = BeaconDataExtract(&parser, NULL);
+		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask);
+	} 
+	else if (MSVCRT$strcmp(triggerType, "daily") == 0) {
+		startTime = BeaconDataExtract(&parser, NULL);
+		expireTime = BeaconDataExtract(&parser, NULL);
+		daysInterval = BeaconDataInt(&parser);
+		delay = BeaconDataExtract(&parser, NULL);
+		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask);
+	} 
+	else if (MSVCRT$strcmp(triggerType, "logon") == 0) {
+		userID = BeaconDataExtract(&parser, NULL);
+		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask);
+	} 
+	else if (MSVCRT$strcmp(triggerType, "startup") == 0) {
+		delay = BeaconDataExtract(&parser, NULL);
+		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask);
+	} 
+	else if (MSVCRT$strcmp(triggerType, "lock") == 0) {
+		userID = BeaconDataExtract(&parser, NULL);
+		delay = BeaconDataExtract(&parser, NULL);
+		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask);
+	} 
+	else if (MSVCRT$strcmp(triggerType, "unlock") == 0) {
+		userID = BeaconDataExtract(&parser, NULL);
+		delay = BeaconDataExtract(&parser, NULL);
+		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask);
 	}
 	else {
-		BeaconPrintf(CALLBACK_ERROR,"Please specify one of the following options: create | delete\n");
-		return 0;
+		BeaconPrintf(CALLBACK_ERROR, "Specified triggerType is not supported.\n");
 	}
-	
+
 	return 0;
 }
 
