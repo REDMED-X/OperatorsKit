@@ -1,5 +1,5 @@
 # LoadLib
-Load a on disk present DLL via RtlRemoteCall API in a remote process. Depending on the process from which you run this tool, it may or may not work.
+Load an on disk present DLL via RtlRemoteCall API in a remote process. Depending on the process from which you run this tool, it may or may not work.
 
 ## Options
 * `<pid>`: specify the target process to load the DLL into. 

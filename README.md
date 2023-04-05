@@ -19,10 +19,9 @@ The following tools are currently in the operators' kit:
 |**[FindRWX](KIT/FindRWX)**|Find RWX memory regions in a target process.|
 |**[FindSysmon](KIT/FindSysmon)**|Verify if Sysmon is running through enumerating Minifilter drivers and checking the registry.|
 |**[HideFile](KIT/HideFile)**|Hide file or directory by setting it's attributes to systemfile + hidden.|
-|**[LoadLib](KIT/LoadLib)**|Load a on disk present DLL via RtlRemoteCall API in a remote process.|
+|**[LoadLib](KIT/LoadLib)**|Load an on disk present DLL via RtlRemoteCall API in a remote process.|
 |**[PSremote](KIT/PSremote)**|List all running processes on a remote host.|
 |**[SilenceSysmon](KIT/SilenceSysmon)**|Silence the Sysmon service by patching its capability to write ETW events to the log.|
-|**[TaskScheduler](KIT/TaskScheduler)**|Create or delete a scheduled task on the current system or a remote host.|
 
 ## Usage
 Each individual tool has its own README file with usage information and compile instructions. 

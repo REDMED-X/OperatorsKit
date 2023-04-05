@@ -1,14 +1,14 @@
 # AddTaskScheduler
 This tool can be used to create a scheduled task on the current system or a remote host. It supports multiple trigger options. 
 
->As a rule of thumb, setting a scheduled task for any user but yourself, requires elevated privileges. Furthermore, the tool returns error codes if the operation fails. The most common error codes are: 80070005 (not enough privileges), 80041318/80041319 (most likely you made a typo in one of the input fields), and 80070002 (scheduled task doesn't exist). 
+>As a rule of thumb, setting a scheduled task for any user but yourself, requires elevated privileges. Furthermore, the tool returns error codes if the operation fails. The most common error codes are: 80070005 (not enough privileges), and 80041318/80041319 (most likely you made a typo in one of the input fields). 
 
 ## Basic parameters
 * `taskName`: The name of the scheduled task.
 * `hostName`: Specify `""` for the current system or the FQDN of the remote host: `DB01.example.local`. 
 * `programPath`: Path to the program that you want to run like: `C:\Windows\System32\cmd.exe`.
 * `programArguments`: Arguments that you want to pass to the program like: `"/c C:\Windows\System32\calc.exe"` or `""` to leave it empty.
-* `triggerType`: The trigger that signals the execution like: `onetime`, `daily`, `logon`, `startup`, `lock`, `unlock`. For more information, check the TRIGGER OPTIONS below.
+* `triggerType`: The trigger that signals the execution like: `onetime`, `daily`, `logon`, `startup`, `lock`, `unlock`. For more information, check the "Supported trigger options" below.
 
 ## Supported trigger options
 * `onetime`: Create task with trigger "On a schedule: one time".
@@ -26,7 +26,7 @@ This tool can be used to create a scheduled task on the current system or a remo
 * `userID`: Specify the user for which the trigger is set in format: `"DOMAIN\username"` for domain users, `username` for local system users and `""` for all users (requires admin privs if set for another user or all users).
 * `repeatTask`: Set "Repeat task every x minutes/hours" option in format `PT2H` with a duration of `Indefinitely`.
 
-## Usage
+## Usage trigger options
 * `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" onetime <startTime> <(optional) repeatTask>`
 * `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" daily <startTime> <(optional) expireTime> <(optional) daysInterval> <(optional) delay>`
 * `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" logon <(optional) userID>`
