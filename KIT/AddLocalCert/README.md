@@ -1,7 +1,7 @@
 # AddLocalCert
-Add a (self signed) certificate to a specific local computer certificate store. For example, add a self signed certificate -that you also used to sign your malicious binary with- to the \"Trusted Root Certification Authorities\" (ROOT) folder on the local computer. 
+Add a (self signed) certificate to a specific local computer certificate store. For example, add a self signed certificate -that you also used to sign your malicious binary with- to the \"Trusted Root Certification Authorities\" (ROOT) folder on the target local computer. 
 
->All the properties are filled in based on the metadata in the certificate except the \"Friendly Name\" property. This property needs to be set manually as an argument.
+>All the properties are filled in based on the metadata in the certificate except the \"Friendly Name\" property. This property needs to be set manually as an argument. Furthermore, there is no need to upload the .cer file first to the target system. You can just specifiy the path on your own attacker system to the .cer file that you want to add to the target computer store. 
 
 
 ## Arguments
