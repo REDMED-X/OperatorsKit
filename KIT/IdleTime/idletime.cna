@@ -1,0 +1,18 @@
+# author REDMED-X
+
+beacon_command_register(
+	"idletime", "Check current user activity based on the user's last input",
+	"INFO:\nCheck current user activity based on the user's last input. Returns the time in format HH:MM:SS.\n\n" .
+	"USAGE:\nidletime\n\n");
+	
+alias idletime {
+    $bid = $1;
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("idletime.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+	blog($bid, "Tasked to check user activity..");
+    beacon_inline_execute($bid, $data, "go", $null);
+}

