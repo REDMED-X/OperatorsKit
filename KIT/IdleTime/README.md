@@ -1,4 +1,4 @@
-# ListSecProducts
+# IdleTime
 Check current user activity based on the user's last input. Returns the time in format HH:MM:SS.
 
 
