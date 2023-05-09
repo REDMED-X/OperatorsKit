@@ -2,7 +2,7 @@
 
 beacon_command_register(
 	"findwebclient", "Find running WebClient services.",
-	"INFO:\nFind hosts with the WebClient service running based on a list of predefined hostnames or IP addresses. The list is loaded from your own attacker system.\n\n" .
+	"INFO:\nFind hosts with the WebClient service running based on a list with predefined hostnames or IP addresses. The list is loaded from your own attacker system.\n\n" .
 	"ARGUMENTS:\n[<path to file>]: the path on your own attacker system to the file containing the list with predefined hostnames. Each hostname must be newline separated.\n[debug]: optional argument to include hostnames in the output that couldn't be reached or on which the WebClient was not running.\n\n" .
 	"USAGE:\nfindwebclient <path to hostname file> [opt:debug]\n\n" .
 	"EXAMPLES:\nfindwebclient C:\\Users\\redmed\\Documents\\hostnames.txt\nfindwebclient C:\\Users\\redmed\\Documents\\hostnames.txt debug\n\n");

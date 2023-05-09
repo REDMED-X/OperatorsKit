@@ -20,6 +20,7 @@ The following tools are currently in the operators' kit:
 |**[FindLib](KIT/FindLib)**|Find loaded module(s) in remote process(es).|
 |**[FindRWX](KIT/FindRWX)**|Find RWX memory regions in a target process.|
 |**[FindSysmon](KIT/FindSysmon)**|Verify if Sysmon is running through enumerating Minifilter drivers and checking the registry.|
+|**[FindWebClient](KIT/FindWebClient)**|Find hosts with the WebClient service running based on a list with predefined hostnames.|
 |**[HideFile](KIT/HideFile)**|Hide file or directory by setting it's attributes to systemfile + hidden.|
 |**[IdleTime](KIT/IdleTime)**|Check current user activity based on the user's last input.|
 |**[LoadLib](KIT/LoadLib)**|Load an on disk present DLL via RtlRemoteCall API in a remote process.|
