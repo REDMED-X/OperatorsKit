@@ -1,5 +1,5 @@
 # CaptureNetNTLM
-Capture the NetNTLMv2 hash of the current user. This is done by simulating a NTLM authentication exchange between a client and server to captures the NetNTLMv2 hash.
+Capture the NetNTLMv2 hash of the current user. This is done by simulating a NTLM authentication exchange between a client and server to capture the NetNTLMv2 hash.
 
 
 ## Usage
