@@ -2,7 +2,7 @@
 
 beacon_command_register(
 	"capturenetntlm", "Capture the NetNTLMv2 hash of the current user.",
-	"INFO:\nCapture the NetNTLMv2 hash of the current user. This is done by simulating a NTLM authentication exchange between a client and server to captures the NetNTLMv2 hash.\n\n" .
+	"INFO:\nCapture the NetNTLMv2 hash of the current user. This is done by simulating a NTLM authentication exchange between a client and server to capture the NetNTLMv2 hash.\n\n" .
 	"USAGE:\ncapturenetntlm\n\n");
 	
 alias capturenetntlm {
