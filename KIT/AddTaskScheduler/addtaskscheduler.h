@@ -1,5 +1,11 @@
 #include <windows.h>  
 
+//IsElevated
+DECLSPEC_IMPORT BOOL WINAPI ADVAPI32$OpenProcessToken(HANDLE ProcessHandle, DWORD DesiredAccess, PHANDLE TokenHandle);
+DECLSPEC_IMPORT BOOL WINAPI ADVAPI32$GetTokenInformation(HANDLE TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, LPVOID TokenInformation, DWORD TokenInformationLength, PDWORD ReturnLength);
+DECLSPEC_IMPORT BOOL WINAPI KERNEL32$CloseHandle(HANDLE hObject);
+DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$GetCurrentProcess(void);
+
 //CreateScheduledTask
 DECLSPEC_IMPORT HRESULT WINAPI OLE32$CoInitializeEx(LPVOID pvReserved, DWORD dwCoInit);
 DECLSPEC_IMPORT void WINAPI OLE32$CoUninitialize(void);

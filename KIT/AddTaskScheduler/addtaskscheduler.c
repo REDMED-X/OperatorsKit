@@ -189,6 +189,26 @@ HRESULT SetUnlockTask(HRESULT hr, ITriggerCollection* pTriggerCollection, wchar_
 }
 
 
+BOOL IsElevated() {
+    BOOL fIsElevated = FALSE;
+    HANDLE hToken = NULL;
+
+    if (ADVAPI32$OpenProcessToken(KERNEL32$GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+        TOKEN_ELEVATION elevation;
+        DWORD dwSize;
+
+        if (ADVAPI32$GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &dwSize)) {
+            fIsElevated = elevation.TokenIsElevated;
+        }
+    }
+
+    if (hToken) {
+        KERNEL32$CloseHandle(hToken);
+    }
+    return fIsElevated;
+}
+
+
 BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, wchar_t* programPath, wchar_t* programArguments, wchar_t* startTime, wchar_t* expireTime, int daysInterval, wchar_t* delay, wchar_t* userID, wchar_t* repeatTask) {
     BOOL actionResult = FALSE;
 	HRESULT hr = S_OK;
@@ -233,12 +253,21 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 		goto cleanup;
     }
 	
-    IPrincipal* pPrincipal = NULL;
-    hr = pTaskDefinition->lpVtbl->get_Principal(pTaskDefinition, &pPrincipal);
-    if (SUCCEEDED(hr)) {
-        pPrincipal->lpVtbl->put_LogonType(pPrincipal, TASK_LOGON_INTERACTIVE_TOKEN);
-        pPrincipal->lpVtbl->Release(pPrincipal);
-    }
+	IPrincipal* pPrincipal = NULL;
+	hr = pTaskDefinition->lpVtbl->get_Principal(pTaskDefinition, &pPrincipal);
+	if (SUCCEEDED(hr)) {
+		if (IsElevated()) {
+			BeaconPrintf(CALLBACK_OUTPUT, "[*] Running in elevated context and setting \"Run whether user is logged on or not\" security option!\n"); 
+			BSTR systemUser = OLEAUT32$SysAllocString(L"SYSTEM");
+			pPrincipal->lpVtbl->put_UserId(pPrincipal, systemUser);
+			OLEAUT32$SysFreeString(systemUser);
+			
+		}else {
+			pPrincipal->lpVtbl->put_LogonType(pPrincipal, TASK_LOGON_INTERACTIVE_TOKEN);
+		}
+		pPrincipal->lpVtbl->Release(pPrincipal);
+	}
+	
 
     ITriggerCollection* pTriggerCollection = NULL;
     hr = pTaskDefinition->lpVtbl->get_Triggers(pTaskDefinition, &pTriggerCollection);
