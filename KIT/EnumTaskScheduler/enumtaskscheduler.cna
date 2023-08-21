@@ -1,0 +1,29 @@
+# author REDMED-X
+
+beacon_command_register(
+	"enumtaskscheduler", "Enumerate and list all the scheduled tasks in the root folder.",
+	"INFO:\nEnumerate and list all the scheduled tasks in the root folder.\n\n" .
+	"ARGUMENTS:\n[hostName]: The FQDN of the remote host or \"\" for the current system.\n\n" .
+	"USAGE:\nenumtaskscheduler <(optional) hostName>\n\n" .
+	"EXAMPLES:\nenumtaskscheduler \nenumtaskscheduler DB01.example.local\n\n");
+	
+alias enumtaskscheduler {
+    $bid = $1;
+	$host = $2; 
+
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("enumtaskscheduler.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+
+	$arg_data  = bof_pack($bid, "Z", $host);
+
+	blog($bid, "Tasked to enumerate scheduled tasks in the root folder..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+
+}
+
+
+
