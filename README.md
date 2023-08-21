@@ -16,6 +16,7 @@ The following tools are currently in the operators' kit:
 |**[DllEnvHijacking](KIT/DllEnvHijacking)**|BOF implementation of DLL environment hijacking published by [Wietze](https://www.wietzebeukema.nl/blog/save-the-environment-variables).|
 |**[EnumLocalCert](KIT/EnumLocalCert)**|List all local computer certificates from a specific store.|
 |**[EnumSecProducts](KIT/EnumSecProducts)**|List security products (like AV/EDR) that are running on the system.|
+|**[EnumTaskScheduler](KIT/EnumTaskScheduler)**|Enumerate and list all the scheduled tasks in the root folder.|
 |**[FindDotnet](KIT/FindDotnet)**|Find processes that most likely have .NET loaded.|
 |**[FindHandle](KIT/FindHandle)**|Find "process" and "thread" handle types between processes.|
 |**[FindLib](KIT/FindLib)**|Find loaded module(s) in remote process(es).|
