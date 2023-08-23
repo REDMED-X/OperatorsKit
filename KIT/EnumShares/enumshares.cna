@@ -1,0 +1,36 @@
+# author REDMED-X
+
+beacon_command_register(
+	"enumshares", "List remote shares and there access level using a predefined list with hostnames.",
+	"INFO:\nList remote shares and there access level based on a list with predefined hostnames or IP addresses. The list is loaded from your own attacker system.\n\n" .
+	"ARGUMENTS:\n[<path to file>]: the path on your own attacker system to the file containing the list with predefined hostnames. Each hostname must be newline separated.\n\n" .
+	"USAGE:\nenumshares <path to hostname file>\n\n" .
+	"EXAMPLES:\nenumshares C:\\Users\\RTO\\Documents\\hostnames.txt\n\n");
+	
+alias enumshares {
+    $bid = $1;
+	$path = $2;
+	
+	if ($path eq "") {
+		berror($bid, "Please specify the path on your own attacker system to the file containing the list with newline separated hostnames.\n");
+		return;
+	}
+
+	# read in the .txt file
+	$handle = openf("$path");
+	$file = readb($handle, -1);
+	closef($handle);
+	
+	blog($bid, "path: $+  $path");
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("enumshares.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data = bof_pack($bid, "b", $file);
+
+	blog($bid, "Tasked to enumerate remote shares..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
