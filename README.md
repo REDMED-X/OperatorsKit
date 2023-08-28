@@ -30,6 +30,7 @@ The following tools are currently in the operators' kit:
 |**[LoadLib](KIT/LoadLib)**|Load an on disk present DLL via RtlRemoteCall API in a remote process.|
 |**[PSremote](KIT/PSremote)**|List all running processes on a remote host.|
 |**[SilenceSysmon](KIT/SilenceSysmon)**|Silence the Sysmon service by patching its capability to write ETW events to the log.|
+|**[SystemInfo](KIT/SystemInfo)**|Enumerate system information via WMI (limited use case).|
 
 ## Usage
 Each individual tool has its own README file with usage information and compile instructions. 
