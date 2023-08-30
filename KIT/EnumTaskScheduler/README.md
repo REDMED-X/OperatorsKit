@@ -1,5 +1,7 @@
 # EnumTaskScheduler
-Enumerate and list all the scheduled tasks in the root folder.
+Enumerate and list all the scheduled tasks in the root folder. 
+
+>This will only return basic information about the scheduled task in the root folder. For a more comprehensive output and a complete list of all the scheduled tasks on the host, use the schtasksenum BOF from [TrustedSec](https://github.com/trustedsec/CS-Situational-Awareness-BOF).
 
 ## Parameters
 * `hostName`: Specify `""` for the current system or the FQDN of the remote host: `DB01.example.local`. 
