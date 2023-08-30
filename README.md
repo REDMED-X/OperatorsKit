@@ -14,10 +14,10 @@ The following tools are currently in the operators' kit:
 |**[DelLocalCert](KIT/DelLocalCert)**|Delete a local computer certificate from a specific store.|
 |**[DelTaskScheduler](KIT/DelTaskScheduler)**|Delete a scheduled task on the current- or a remote host.|
 |**[DllEnvHijacking](KIT/DllEnvHijacking)**|BOF implementation of DLL environment hijacking published by [Wietze](https://www.wietzebeukema.nl/blog/save-the-environment-variables).|
-|**[EnumLocalCert](KIT/EnumLocalCert)**|List all local computer certificates from a specific store.|
-|**[EnumSecProducts](KIT/EnumSecProducts)**|List security products (like AV/EDR) that are running on the system.|
-|**[EnumShares](KIT/EnumShares)**|List remote shares and there access level using a predefined list with hostnames.|
-|**[EnumTaskScheduler](KIT/EnumTaskScheduler)**|Enumerate and list all the scheduled tasks in the root folder.|
+|**[EnumLocalCert](KIT/EnumLocalCert)**|Enumerate all local computer certificates from a specific store.|
+|**[EnumSecProducts](KIT/EnumSecProducts)**|Enumerate security products (like AV/EDR) that are running on the system.|
+|**[EnumShares](KIT/EnumShares)**|Enumerate remote shares and your access level using a predefined list with hostnames.|
+|**[EnumTaskScheduler](KIT/EnumTaskScheduler)**|Enumerate all scheduled tasks in the root folder.|
 |**[FindDotnet](KIT/FindDotnet)**|Find processes that most likely have .NET loaded.|
 |**[FindFile](KIT/FindFile)**|Search for matching files based on a word, extention or keyword in the file content.|
 |**[FindHandle](KIT/FindHandle)**|Find "process" and "thread" handle types between processes.|
@@ -26,10 +26,10 @@ The following tools are currently in the operators' kit:
 |**[FindSysmon](KIT/FindSysmon)**|Verify if Sysmon is running by checking the registry and listing Minifilter drivers.|
 |**[FindWebClient](KIT/FindWebClient)**|Find hosts with the WebClient service running based on a list with predefined hostnames.|
 |**[ForceLockScreen](KIT/ForceLockScreen)**|Force the lock screen of the current user session.|
-|**[HideFile](KIT/HideFile)**|Hide file or directory by setting it's attributes to systemfile + hidden.|
+|**[HideFile](KIT/HideFile)**|Hide a file or directory by setting it's attributes to systemfile + hidden.|
 |**[IdleTime](KIT/IdleTime)**|Check current user activity based on the user's last input.|
 |**[LoadLib](KIT/LoadLib)**|Load an on disk present DLL via RtlRemoteCall API in a remote process.|
-|**[PSremote](KIT/PSremote)**|List all running processes on a remote host.|
+|**[PSremote](KIT/PSremote)**|Enumerate all running processes on a remote host.|
 |**[SilenceSysmon](KIT/SilenceSysmon)**|Silence the Sysmon service by patching its capability to write ETW events to the log.|
 |**[SystemInfo](KIT/SystemInfo)**|Enumerate system information via WMI (limited use case).|
 
