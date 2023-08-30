@@ -1,0 +1,39 @@
+# author REDMED-X
+
+beacon_command_register(
+    "findfile", "Search for matching files based on a word, extention or keyword.",
+    "INFO:\nSearch for matching files based on a word, extention or keyword in the file content. Wildcards are supported . Keyword matching only works for text based files.\n\n" .
+	"ARGUMENTS:\n[<path to directory>]: specify a path to the directory from which to start searching (recursive searching supported).\n[<search pattern>]: specify a single word or extention to search for (support wildcards).\n[<keyword>]: leave empty OR specify a keyword to search for in text based files (support wildcards).\n\n" .
+	"USAGE:\nfindfile <path to directory> <search pattern> <(optional) keyword> \n\n" .
+	"EXAMPLES:\nfindfile C:\\Users\\RTO\\Documents *.xlsx\nfindfile C:\\Users\\RTO *login*.* username\nfindfile C:\\Users\\RTO *.txt *pass*\n\n");
+
+
+alias findfile {
+    $bid = $1;
+	$lpDirectory = $2;
+    $lpSearchPattern = $3;
+    $keyword = $4;
+
+    if ($lpDirectory eq "") {
+        berror($bid, "Please specify a path to a directory.\n");
+        return;
+    }
+
+    if ($lpSearchPattern eq "") {
+        berror($bid, "Please specify a pattern/word to search for.\n");
+        return;
+    }
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("findfile.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "zzz", $lpDirectory, $lpSearchPattern, $keyword);
+
+    blog($bid, "Tasked to search for matching files..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+

@@ -19,10 +19,11 @@ The following tools are currently in the operators' kit:
 |**[EnumShares](KIT/EnumShares)**|List remote shares and there access level using a predefined list with hostnames.|
 |**[EnumTaskScheduler](KIT/EnumTaskScheduler)**|Enumerate and list all the scheduled tasks in the root folder.|
 |**[FindDotnet](KIT/FindDotnet)**|Find processes that most likely have .NET loaded.|
+|**[FindFile](KIT/FindFile)**|Search for matching files based on a word, extention or keyword in the file content.|
 |**[FindHandle](KIT/FindHandle)**|Find "process" and "thread" handle types between processes.|
 |**[FindLib](KIT/FindLib)**|Find loaded module(s) in remote process(es).|
 |**[FindRWX](KIT/FindRWX)**|Find RWX memory regions in a target process.|
-|**[FindSysmon](KIT/FindSysmon)**|Verify if Sysmon is running through enumerating Minifilter drivers and checking the registry.|
+|**[FindSysmon](KIT/FindSysmon)**|Verify if Sysmon is running by checking the registry and listing Minifilter drivers.|
 |**[FindWebClient](KIT/FindWebClient)**|Find hosts with the WebClient service running based on a list with predefined hostnames.|
 |**[ForceLockScreen](KIT/ForceLockScreen)**|Force the lock screen of the current user session.|
 |**[HideFile](KIT/HideFile)**|Hide file or directory by setting it's attributes to systemfile + hidden.|
