@@ -1,10 +1,15 @@
 # EnumSecProducts
-Get a list of security products (like AV/EDR) that are running on the system. This is done by comparing running processes against a hardcoded list of 130 security products.
+Get a list of security products like AV/EDR that are running on the current- or remote host. This is done by comparing running processes against a hardcoded list of 130 security products.
 
+## Arguments
+* `[hostname]`: The hostname/FQDN/IP of the remote host OR leave empty for the current system.\n\n" .
 
 ## Usage
-* `enumsecproducts`
+* `enumsecproducts <(optional) hostname>`
 
+## Examples
+* `enumsecproducts`
+* `enumsecproducts WS01.example.local`
 
 ## Compile
 - 1\. Make sure Visual Studio is installed and supports C/C++.

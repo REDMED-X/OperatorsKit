@@ -1,18 +1,26 @@
 # author REDMED-X
 
 beacon_command_register(
-	"enumsecproducts", "List security products running on the system.",
-	"INFO:\nGet a list of security products (like AV/EDR) that are running on the system. This is done by comparing running processes against a hardcoded list of 130 security products.\n\n" .
-	"USAGE:\nenumsecproducts\n\n");
-	
+    "enumsecproducts", "List security products running on the current- or remote host.",
+    "INFO:\nGet a list of security products like AV/EDR that are running on the current- or remote host. This is done by comparing running processes against a hardcoded list of 130 security products.\n\n" .
+	"ARGUMENTS:\n[hostname]: The FQDN or IP of the remote host OR leave empty for the current system.\n\n" .
+    "USAGE:\nenumsecproducts <(optional) hostname>\n\n" .
+	"EXAMPLES:\nenumsecproducts \nenumsecproducts WS01.example.local\n\n");
+
+
 alias enumsecproducts {
     $bid = $1;
+    $remotehost = $2;
 
-    # Read in the right BOF file
+    # read in the right BOF file
     $handle = openf(script_resource("enumsecproducts.o"));
     $data = readb($handle, -1);
     closef($handle);
 
-	blog($bid, "Tasked to list running security products..");
-    beacon_inline_execute($bid, $data, "go", $null);
+    # pack our arguments
+    $arg_data = bof_pack($bid, "z", $remotehost);
+
+    blog($bid, "Tasked to list running security products..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
 }
+

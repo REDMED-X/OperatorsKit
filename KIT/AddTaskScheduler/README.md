@@ -1,5 +1,5 @@
 # AddTaskScheduler
-This tool can be used to create a scheduled task on the current system or a remote host. It supports multiple trigger options. 
+This tool can be used to create a scheduled task on the current system or a remote host. It supports multiple trigger options. If the tool is running with elevated privileges, it will automatically set the `Run whether user is logged on or not` security option as `NT AUTHORITY\SYSTEM`. 
 
 >As a rule of thumb, setting a scheduled task for any user but yourself, requires elevated privileges. Furthermore, the tool returns error codes if the operation fails. The most common error codes are: 80070005 (not enough privileges), 80041318/80041319 (most likely you made a typo in one of the input fields), and 80070002 (scheduled task doesn't exist). 
 
@@ -13,10 +13,10 @@ This tool can be used to create a scheduled task on the current system or a remo
 ## Supported trigger options
 * `onetime`: Create task with trigger "On a schedule: one time".
 * `daily`: Create task with trigger "On a schedule: daily."
-* `logon`: Create task with trigger "At log on" (requires admin privs if set for another user or all users).
-* `startup`: Create task with trigger "At startup" (requires admin privs).
-* `lock`: Create task with trigger "On workstation lock" (requires admin privs if set for another user or all users).
-* `unlock`: Create task with trigger "On workstation unlock" (requires admin privs if set for another user or all users).
+* `logon`: Create task with trigger "At log on" (requires elevated privileges if set for another user or all users).
+* `startup`: Create task with trigger "At startup" (requires elevated privileges).
+* `lock`: Create task with trigger "On workstation lock" (requires elevated privileges if set for another user or all users).
+* `unlock`: Create task with trigger "On workstation unlock" (requires elevated privileges if set for another user or all users).
 
 ## Trigger specific parameters
 * `startTime`: Start time of the trigger in format: `2023-03-24T12:08:00`.
@@ -35,9 +35,9 @@ This tool can be used to create a scheduled task on the current system or a remo
 * `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" unlock <(optional) userID> <(optional) delay>`
 
 ## Examples
-* `addtaskscheduler TestTask "" C:\Windows\System32\cmd.exe "/c C:\Windows\System32\calc.exe" daily 2023-03-24T12:08:00 2023-03-28T12:14:00 1 PT2H`
-* `addtaskscheduler NewTask DB01.example.local C:\Users\Public\Downloads\legit.exe "" logon Testdomain\Administrator`
-* `addtaskscheduler OneDrive "" C:\Data\OneDrive.exe "" unlock "" PT5M`
+* `addtaskscheduler ExampleTask "" C:\Users\Public\Downloads\payload.exe "" onetime 2023-03-24T12:08:00 PT3H`
+* `addtaskscheduler ExampleTask "" C:\Windows\System32\cmd.exe "/c C:\Windows\System32\calc.exe" daily 2023-03-24T12:08:00 2023-03-28T12:14:00 1 PT2H`
+* `addtaskscheduler ExampleTask DB01.example.local C:\Users\Public\Downloads\payload.exe "" startup PT1M`
 
 ## Compile
 - 1\. Make sure Visual Studio is installed and supports C/C++.

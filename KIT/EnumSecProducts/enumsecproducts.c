@@ -1,9 +1,7 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include <ctype.h>
 #include <windows.h>
-#include <tlhelp32.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <wtsapi32.h>
 #include "enumsecproducts.h"
 #include "beacon.h"
 
@@ -13,7 +11,6 @@ typedef struct {
     const char *description;
     const char *category;
 } SoftwareData;
-
 
 
 //https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
@@ -29,7 +26,7 @@ HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
 		}
 	}
 
-	if (g_lpwPrintBuffer <= (LPWSTR)1) { 
+	if (g_lpwPrintBuffer <= (LPWSTR)1) {  
 		g_lpwPrintBuffer = (LPWSTR)MSVCRT$calloc(MAX_STRING, sizeof(WCHAR));
 		if (g_lpwPrintBuffer == NULL) {
 			hr = E_FAIL;
@@ -89,6 +86,7 @@ VOID BeaconOutputStreamW() {
 	}
 
 CleanUp:
+
 	if (g_lpStream != NULL) {
 		g_lpStream->lpVtbl->Release(g_lpStream);
 		g_lpStream = NULL;
@@ -102,22 +100,32 @@ CleanUp:
 	if (lpwOutput != NULL) {
 		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, lpwOutput);
 	}
+
 	return;
 }
 
 
 
-bool CheckSecProc() {
-    bool foundSecProduct = false;
-    HANDLE procHandle;
-    PROCESSENTRY32 pe32;
+
+void go(char *args, int len) {
+	CHAR *hostName = "";
+	HANDLE handleHost = NULL;
+    datap parser;
+	DWORD argSize = NULL;
+	WTS_PROCESS_INFOA * proc_info;
+	DWORD pi_count = 0;
+	LPSTR procName; 
+	bool foundSecProduct = false;
 	
+    BeaconDataParse(&parser, args, len);
+    hostName = BeaconDataExtract(&parser, &argSize);
+
 	//allocate memory for list
 	size_t numSoftware = 130; //130
     SoftwareData *softwareList = (SoftwareData *)KERNEL32$VirtualAlloc(NULL, numSoftware * sizeof(SoftwareData), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-
     if (softwareList == NULL) {
-        return 1;
+		BeaconPrintf(CALLBACK_ERROR, "Failed to allocate memory for softwareList.\n");
+        return -1;
     }
 
     //Start security product list
@@ -642,51 +650,52 @@ bool CheckSecProc() {
 	softwareList[129].category = L"AV";
 	//End security product list
 
+	
+	//get handle to specified host
+	handleHost = WTSAPI32$WTSOpenServerA(hostName);
 
 	//get list of running processes 
-	procHandle = KERNEL32$CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (procHandle == INVALID_HANDLE_VALUE) {
-        return false;
-    }
-
-    pe32.dwSize = sizeof(PROCESSENTRY32);
-    if (!KERNEL32$Process32First(procHandle, &pe32)) {
-        KERNEL32$CloseHandle(procHandle);
-        return false;
-    }
+	if (!WTSAPI32$WTSEnumerateProcessesA(handleHost, 0, 1, &proc_info, &pi_count)) {
+		BeaconPrintf(CALLBACK_ERROR, "Failed to get a valid handle to the specified host.\n");
+		return -1;
+	}
 	
+	if(pi_count == 0) {
+		BeaconPrintf(CALLBACK_ERROR, "Couldn't list remote processes. Do you have enough privileges on the remote host?\n");
+		return -1;
+	}
+
 	//compare list with running processes
-	BeaconPrintToStreamW(L"\nDescription\t\t\t\t\tCategory\n");
-	BeaconPrintToStreamW(L"===============================================================\n");
-    do {
-        char procName[MAX_PATH];
-        MSVCRT$strcpy(procName, pe32.szExeFile);
-        for (size_t i = 0; procName[i]; i++) {
+	BeaconPrintToStreamW(L"Description\t\t\t\t\tCategory\n--------------------------------------------------------------\n");
+	for (int i = 0 ; i < pi_count ; i++ ) {
+		procName = proc_info[i].pProcessName;
+		
+		for (size_t i = 0; procName[i]; i++) {
             procName[i] = MSVCRT$tolower(procName[i]); 
         }
-
-        for (size_t i = 0; i < numSoftware; i++) {
-            if (MSVCRT$strcmp(procName, softwareList[i].filename) == 0) {
-                foundSecProduct = true;
-                BeaconPrintToStreamW(L"%-50ls\t%ls\n", softwareList[i].description, softwareList[i].category);
+		
+		for (size_t i = 0; i < numSoftware; i++) {
+			if (MSVCRT$strcmp(procName, softwareList[i].filename) == 0) {
+				BeaconPrintToStreamW(L"%-50ls\t%ls\n", softwareList[i].description, softwareList[i].category);
+				foundSecProduct = true;
                 break;
             }
-        }
-    } while (KERNEL32$Process32Next(procHandle, &pe32));
-
-    KERNEL32$CloseHandle(procHandle);
+		}
+		procName = NULL;
+	}
+	
+	if (foundSecProduct) {
+        BeaconOutputStreamW();
+		BeaconPrintf(CALLBACK_OUTPUT, "[+] Finished enumerating.\n");
+    } else {
+        BeaconPrintf(CALLBACK_ERROR, "No running security processes were found.\n");
+    }
+	
+	WTSAPI32$WTSCloseServer(handleHost);
 	KERNEL32$VirtualFree(softwareList, 0, MEM_RELEASE);
 
-    return foundSecProduct;
-}
-
-
-int go() {
-    if (CheckSecProc()) {
-		BeaconOutputStreamW();
-        BeaconPrintf(CALLBACK_OUTPUT,"\n[+] Finished enumerating security products.\n");
-    } else {
-        BeaconPrintf(CALLBACK_OUTPUT,"\n[+] No security products from the list were found on the system!\n");
-    }
     return 0;
 }
+
+
+

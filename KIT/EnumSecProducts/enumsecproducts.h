@@ -1,16 +1,17 @@
-#include <windows.h>  
+#include <windows.h>
 
 //CheckSecProc
 DECLSPEC_IMPORT void * WINAPI KERNEL32$VirtualAlloc (LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect);
 DECLSPEC_IMPORT int WINAPI KERNEL32$VirtualFree (LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType);
-DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$CreateToolhelp32Snapshot(DWORD, DWORD th32ProcessID);
-DECLSPEC_IMPORT BOOL WINAPI KERNEL32$Process32First(HANDLE hSnapshot, LPPROCESSENTRY32 lppe);
-DECLSPEC_IMPORT BOOL WINAPI KERNEL32$Process32Next(HANDLE hSnapshot, LPPROCESSENTRY32 lppe);
-DECLSPEC_IMPORT BOOL WINAPI KERNEL32$CloseHandle(HANDLE hObject);
-DECLSPEC_IMPORT char* __cdecl MSVCRT$strcpy(char* _Dest, const char* _Source);
-DECLSPEC_IMPORT int __cdecl MSVCRT$tolower(int _C);
+WINBASEAPI char* __cdecl MSVCRT$strcpy(char* _Dest, const char* _Source);
+WINBASEAPI int __cdecl MSVCRT$tolower(int _C);
 WINBASEAPI int __cdecl MSVCRT$strcmp(const char *str1, const char *str2);
 WINBASEAPI int __cdecl MSVCRT$printf(const char * _Format,...);
+DECLSPEC_IMPORT HANDLE WINAPI WTSAPI32$WTSOpenServerA(LPSTR pServerName);
+DECLSPEC_IMPORT BOOL WINAPI WTSAPI32$WTSEnumerateProcessesA(HANDLE hServer, DWORD Reserved, DWORD Version, PWTS_PROCESS_INFOA *ppProcessInfo, DWORD *pCount);
+DECLSPEC_IMPORT HANDLE WINAPI WTSAPI32$WTSCloseServer(HANDLE hServer);
+DECLSPEC_IMPORT DWORD WINAPI KERNEL32$GetLastError(void);
+
 
 //BeaconPrintToStreamW + BeaconOutputStreamW
 #define MAX_STRING 8192
@@ -26,8 +27,5 @@ WINBASEAPI HANDLE WINAPI KERNEL32$GetProcessHeap();
 WINBASEAPI LPVOID WINAPI KERNEL32$HeapAlloc(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes);
 WINBASEAPI void __cdecl MSVCRT$free(void *memblock);
 WINBASEAPI BOOL WINAPI KERNEL32$HeapFree(HANDLE, DWORD, PVOID);
-DECLSPEC_IMPORT int WINAPI KERNEL32$MultiByteToWideChar(UINT CodePage, DWORD dwFlags, _In_NLS_string_(cbMultiByte)LPCCH lpMultiByteStr, int cbMultiByte, LPWSTR lpWideCharStr, int cchWideChar);
-
-
 
 

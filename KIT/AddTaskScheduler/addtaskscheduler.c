@@ -221,7 +221,6 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 	ITaskService *pTaskService = NULL;
     hr = OLE32$CoCreateInstance(&CTaskScheduler, NULL, CLSCTX_INPROC_SERVER, &IIDITaskService, (void**)&pTaskService);
     if (FAILED(hr)) {
-		//MSVCRT$printf("Failed to create ITaskService: %x\n", hr); //DEBUG
         return actionResult;
     }
 	
@@ -234,7 +233,6 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 	
 	hr = pTaskService->lpVtbl->Connect(pTaskService, Vhost, VNull, VNull, VNull); 
     if (FAILED(hr)) {
-        //MSVCRT$printf("ITaskService::Connect failed: %x\n", hr); //DEBUG
 		goto cleanup;
     }
 	
@@ -242,7 +240,6 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 	BSTR folderPathBstr = OLEAUT32$SysAllocString(L"\\");
 	hr = pTaskService->lpVtbl->GetFolder(pTaskService, folderPathBstr, &pTaskFolder);
 	if (FAILED(hr)) {
-		//MSVCRT$printf("ITaskService::GetFolder failed: %x\n", hr); //DEBUG
 		goto cleanup;
 	}
 	OLEAUT32$SysFreeString(folderPathBstr);
@@ -253,15 +250,15 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 		goto cleanup;
     }
 	
+	BOOL isRemoteHost = (Vhost.bstrVal && *Vhost.bstrVal);
 	IPrincipal* pPrincipal = NULL;
 	hr = pTaskDefinition->lpVtbl->get_Principal(pTaskDefinition, &pPrincipal);
 	if (SUCCEEDED(hr)) {
-		if (IsElevated()) {
-			BeaconPrintf(CALLBACK_OUTPUT, "[*] Running in elevated context and setting \"Run whether user is logged on or not\" security option!\n"); 
+		if (IsElevated() || isRemoteHost) {
+			BeaconPrintf(CALLBACK_OUTPUT, "[*] Running in elevated context and setting \"Run whether user is logged on or not\" security option as SYSTEM!\n"); 
 			BSTR systemUser = OLEAUT32$SysAllocString(L"SYSTEM");
 			pPrincipal->lpVtbl->put_UserId(pPrincipal, systemUser);
 			OLEAUT32$SysFreeString(systemUser);
-			
 		}else {
 			pPrincipal->lpVtbl->put_LogonType(pPrincipal, TASK_LOGON_INTERACTIVE_TOKEN);
 		}
@@ -272,7 +269,6 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
     ITriggerCollection* pTriggerCollection = NULL;
     hr = pTaskDefinition->lpVtbl->get_Triggers(pTaskDefinition, &pTriggerCollection);
     if (FAILED(hr)) {
-        //MSVCRT$printf("ITaskDefinition::get_Triggers failed: %x\n", hr); //DEBUG
 		goto cleanup;
     }
 
@@ -291,7 +287,6 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 		hr = SetUnlockTask(hr, pTriggerCollection, userID, delay); 
 	} 
 	else {
-		//MSVCRT$printf("[-] [%ls] is not a supported trigger type\n", triggerType); //DEBUG
 		goto cleanup;
 	}
 	
@@ -376,7 +371,7 @@ int go(char *args, int len) {
 	WCHAR *hostName  = L""; 
     WCHAR *programPath; 
     WCHAR *programArguments  = L""; 
-	CHAR *triggerType; //onetime, daily, logon , startup, lock, unlock
+	CHAR *triggerType; 
 	WCHAR *startTime; 
     WCHAR *expireTime = L""; 
 	int daysInterval = 0; 

@@ -112,7 +112,7 @@ BOOL ListProcesses(HANDLE handleTargetHost) {
 	}
 	
 	BeaconPrintToStreamW(L"\nProcess name\t\t\t\tPID\t\t\tSessionID\n");
-	BeaconPrintToStreamW(L"===================================================================================\n");
+	BeaconPrintToStreamW(L"-----------------------------------------------------------------------------------\n");
 	for (int i = 0 ; i < pi_count ; i++ ) {
 		procName = proc_info[i].pProcessName;
 		KERNEL32$MultiByteToWideChar(CP_ACP, 0, procName, -1, WCprocName, 256);
@@ -143,7 +143,7 @@ void go(char *args, int len) {
 	}
 	else  {
 		BeaconOutputStreamW();
-		BeaconPrintf(CALLBACK_OUTPUT, "[+] DONE");
+		BeaconPrintf(CALLBACK_OUTPUT, "[+] Finished enumerating.");
 	}
 
 	return 0;
