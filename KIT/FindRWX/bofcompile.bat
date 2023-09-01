@@ -2,4 +2,3 @@
 
 cl.exe /nologo /c /Od /MT /W0 /GS- /Tc findrwx.c
 move /y findrwx.obj findrwx.o
-dumpbin /disasm findrwx.o > findrwx.disasm

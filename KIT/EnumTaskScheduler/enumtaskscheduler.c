@@ -6,99 +6,76 @@
 #include "beacon.h"
 
 
+//START TrustedSec BOF print code: https://github.com/trustedsec/CS-Situational-Awareness-BOF/blob/master/src/common/base.c
+#ifndef bufsize
+#define bufsize 8192
+#endif
+char *output = 0;  
+WORD currentoutsize = 0;
+HANDLE trash = NULL; 
+int bofstart();
+void internal_printf(const char* format, ...);
+void printoutput(BOOL done);
 
-
-//https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
-HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
-	HRESULT hr = S_FALSE;
-	va_list argList;
-	DWORD dwWritten = 0;
-
-	if (g_lpStream <= (LPSTREAM)1) {
-		hr = OLE32$CreateStreamOnHGlobal(NULL, TRUE, &g_lpStream);
-		if (FAILED(hr)) {
-			return hr;
-		}
-	}
-
-	if (g_lpwPrintBuffer <= (LPWSTR)1) { 
-		g_lpwPrintBuffer = (LPWSTR)MSVCRT$calloc(MAX_STRING, sizeof(WCHAR));
-		if (g_lpwPrintBuffer == NULL) {
-			hr = E_FAIL;
-			goto CleanUp;
-		}
-	}
-
-	va_start(argList, lpwFormat);
-	if (!MSVCRT$_vsnwprintf_s(g_lpwPrintBuffer, MAX_STRING, MAX_STRING -1, lpwFormat, argList)) {
-		hr = E_FAIL;
-		goto CleanUp;
-	}
-
-	if (g_lpStream != NULL) {
-		if (FAILED(hr = g_lpStream->lpVtbl->Write(g_lpStream, g_lpwPrintBuffer, (ULONG)MSVCRT$wcslen(g_lpwPrintBuffer) * sizeof(WCHAR), &dwWritten))) {
-			goto CleanUp;
-		}
-	}
-
-	hr = S_OK;
-
-CleanUp:
-
-	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$memset(g_lpwPrintBuffer, 0, MAX_STRING * sizeof(WCHAR)); // Clear print buffer.
-	}
-
-	va_end(argList);
-	return hr;
+int bofstart() {   
+    output = (char*)MSVCRT$calloc(bufsize, 1);
+    currentoutsize = 0;
+    return 1;
 }
 
-//https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
-VOID BeaconOutputStreamW() {
-	STATSTG ssStreamData = { 0 };
-	SIZE_T cbSize = 0;
-	ULONG cbRead = 0;
-	LARGE_INTEGER pos;
-	LPWSTR lpwOutput = NULL;
-
-	if (FAILED(g_lpStream->lpVtbl->Stat(g_lpStream, &ssStreamData, STATFLAG_NONAME))) {
-		return;
-	}
-
-	cbSize = ssStreamData.cbSize.LowPart;
-	lpwOutput = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, cbSize + 1);
-	if (lpwOutput != NULL) {
-		pos.QuadPart = 0;
-		if (FAILED(g_lpStream->lpVtbl->Seek(g_lpStream, pos, STREAM_SEEK_SET, NULL))) {
-			goto CleanUp;
-		}
-
-		if (FAILED(g_lpStream->lpVtbl->Read(g_lpStream, lpwOutput, (ULONG)cbSize, &cbRead))) {		
-			goto CleanUp;
-		}
-
-		BeaconPrintf(CALLBACK_OUTPUT, "%ls", lpwOutput);
-	}
-
-CleanUp:
-
-	if (g_lpStream != NULL) {
-		g_lpStream->lpVtbl->Release(g_lpStream);
-		g_lpStream = NULL;
-	}
-
-	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$free(g_lpwPrintBuffer);
-		g_lpwPrintBuffer = NULL;
-	}
-
-	if (lpwOutput != NULL) {
-		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, lpwOutput);
-	}
-
-	return;
+void internal_printf(const char* format, ...){
+    int buffersize = 0;
+    int transfersize = 0;
+    char * curloc = NULL;
+    char* intBuffer = NULL;
+    va_list args;
+    va_start(args, format);
+    buffersize = MSVCRT$vsnprintf(NULL, 0, format, args); 
+    va_end(args);
+    
+    if (buffersize == -1) return;
+    
+    char* transferBuffer = (char*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, bufsize);
+	intBuffer = (char*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, buffersize);
+    va_start(args, format);
+    MSVCRT$vsnprintf(intBuffer, buffersize, format, args); 
+    va_end(args);
+    if(buffersize + currentoutsize < bufsize) 
+    {
+        MSVCRT$memcpy(output+currentoutsize, intBuffer, buffersize);
+        currentoutsize += buffersize;
+    } else {
+        curloc = intBuffer;
+        while(buffersize > 0)
+        {
+            transfersize = bufsize - currentoutsize;
+            if(buffersize < transfersize) 
+            {
+                transfersize = buffersize;
+            }
+            MSVCRT$memcpy(output+currentoutsize, curloc, transfersize);
+            currentoutsize += transfersize;
+            if(currentoutsize == bufsize)
+            {
+                printoutput(FALSE); 
+            }
+            MSVCRT$memset(transferBuffer, 0, transfersize); 
+            curloc += transfersize; 
+            buffersize -= transfersize;
+        }
+    }
+	KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, intBuffer);
+	KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, transferBuffer);
 }
 
+void printoutput(BOOL done) {
+    char * msg = NULL;
+    BeaconOutput(CALLBACK_OUTPUT, output, currentoutsize);
+    currentoutsize = 0;
+    MSVCRT$memset(output, 0, bufsize);
+    if(done) {MSVCRT$free(output); output=NULL;}
+}
+//END TrustedSec BOF print code.
 
 
 BOOL EnumScheduledTasks(wchar_t * host) {
@@ -143,8 +120,8 @@ BOOL EnumScheduledTasks(wchar_t * host) {
     long numTasks = 0;
     hr = pTaskCollection->lpVtbl->get_Count(pTaskCollection, &numTasks);
 
-	BeaconPrintToStreamW(L"[+] Scheduled tasks in root folder:\n");
-	BeaconPrintToStreamW(L"=======================================================\n\n");
+	internal_printf("[+] Scheduled tasks in root folder:\n");
+	internal_printf("=======================================================\n\n");
 
 	for (long i = 1; i <= numTasks; i++) { 
 		IRegisteredTask* pRegisteredTask = NULL;
@@ -157,7 +134,7 @@ BOOL EnumScheduledTasks(wchar_t * host) {
 			BSTR taskName = NULL;
 			hr = pRegisteredTask->lpVtbl->get_Name(pRegisteredTask, &taskName);
 			if (SUCCEEDED(hr)) {
-				BeaconPrintToStreamW(L"Task Name: %ls\n", taskName);
+				internal_printf("Task Name: %ls\n", taskName);
 				OLEAUT32$SysFreeString(taskName);
 			}
 			
@@ -174,7 +151,7 @@ BOOL EnumScheduledTasks(wchar_t * host) {
 					BSTR userId = NULL;
 					hr = pPrincipal->lpVtbl->get_UserId(pPrincipal, &userId);
 					if (SUCCEEDED(hr)) {
-						BeaconPrintToStreamW(L"- Task running as: %ls\n", userId);
+						internal_printf("- Task running as: %ls\n", userId);
 						OLEAUT32$SysFreeString(userId);
 					}
 					pPrincipal->lpVtbl->Release(pPrincipal);
@@ -206,14 +183,14 @@ BOOL EnumScheduledTasks(wchar_t * host) {
 										};
 
 										WCHAR* actionTypeName = actionTypes[actionType];  // Using actionType as an index
-										BeaconPrintToStreamW(L"- Action type: %s\n", actionTypeName);
+										internal_printf("- Action type: %ls\n", actionTypeName);
 
 										if (actionType == TASK_ACTION_EXEC) {
 											IExecAction* pExecAction = (IExecAction*) pAction;
 											BSTR execPath;
 											hr = pExecAction->lpVtbl->get_Path(pExecAction, &execPath);
 											if (SUCCEEDED(hr)) {
-												BeaconPrintToStreamW(L"- Executable path: %ls\n", execPath);
+												internal_printf("- Executable path: %ls\n", execPath);
 												OLEAUT32$SysFreeString(execPath);
 											}
 										}
@@ -261,7 +238,7 @@ BOOL EnumScheduledTasks(wchar_t * host) {
 																  ? triggerTypeNames[triggerType] 
 																  : L"Unknown";
 
-									BeaconPrintToStreamW(L"- Trigger type: %s\n", triggerTypeName);
+									internal_printf("- Trigger type: %ls\n", triggerTypeName);
 								}
 
 								pTrigger->lpVtbl->Release(pTrigger);
@@ -279,7 +256,7 @@ BOOL EnumScheduledTasks(wchar_t * host) {
 				pRegisteredTask->lpVtbl->Release(pRegisteredTask);
 			}
 		}
-		BeaconPrintToStreamW(L"----------------------------------------------------\n\n");
+		internal_printf("----------------------------------------------------\n\n");
 	}
 
 cleanup:
@@ -308,13 +285,14 @@ int go(char *args, int len) {
 	
 	BeaconDataParse(&parser, args, len);
 	hostName = BeaconDataExtract(&parser, NULL);
+	if(!bofstart()) return;
 
 	res = EnumScheduledTasks(hostName);
 
 	if(!res) BeaconPrintf(CALLBACK_ERROR, "Failed to enumerate scheduled tasks.\n");
 	else  {
-		BeaconOutputStreamW();
-		BeaconPrintf(CALLBACK_OUTPUT, "[+] Done enumerating!\n");
+		printoutput(TRUE);
+		BeaconPrintf(CALLBACK_OUTPUT, "[+] Finished enumerating!\n");
 	}
 
 

@@ -12,96 +12,76 @@
 #pragma comment(lib, "Shlwapi.lib")
 
 
-//Code from: https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
-HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
-	HRESULT hr = S_FALSE;
-	va_list argList;
-	DWORD dwWritten = 0;
+//START TrustedSec BOF print code: https://github.com/trustedsec/CS-Situational-Awareness-BOF/blob/master/src/common/base.c
+#ifndef bufsize
+#define bufsize 8192
+#endif
+char *output = 0;  
+WORD currentoutsize = 0;
+HANDLE trash = NULL; 
+int bofstart();
+void internal_printf(const char* format, ...);
+void printoutput(BOOL done);
 
-	if (g_lpStream <= (LPSTREAM)1) {
-		hr = OLE32$CreateStreamOnHGlobal(NULL, TRUE, &g_lpStream);
-		if (FAILED(hr)) {
-			return hr;
-		}
-	}
-
-	if (g_lpwPrintBuffer <= (LPWSTR)1) { 
-		g_lpwPrintBuffer = (LPWSTR)MSVCRT$calloc(MAX_STRING, sizeof(WCHAR));
-		if (g_lpwPrintBuffer == NULL) {
-			hr = E_FAIL;
-			goto CleanUp;
-		}
-	}
-
-	va_start(argList, lpwFormat);
-	if (!MSVCRT$_vsnwprintf_s(g_lpwPrintBuffer, MAX_STRING, MAX_STRING -1, lpwFormat, argList)) {
-		hr = E_FAIL;
-		goto CleanUp;
-	}
-
-	if (g_lpStream != NULL) {
-		if (FAILED(hr = g_lpStream->lpVtbl->Write(g_lpStream, g_lpwPrintBuffer, (ULONG)MSVCRT$wcslen(g_lpwPrintBuffer) * sizeof(WCHAR), &dwWritten))) {
-			goto CleanUp;
-		}
-	}
-
-	hr = S_OK;
-
-CleanUp:
-
-	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$memset(g_lpwPrintBuffer, 0, MAX_STRING * sizeof(WCHAR)); // Clear print buffer.
-	}
-
-	va_end(argList);
-	return hr;
+int bofstart() {   
+    output = (char*)MSVCRT$calloc(bufsize, 1);
+    currentoutsize = 0;
+    return 1;
 }
 
-//Code from: https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
-VOID BeaconOutputStreamW() {
-	STATSTG ssStreamData = { 0 };
-	SIZE_T cbSize = 0;
-	ULONG cbRead = 0;
-	LARGE_INTEGER pos;
-	LPWSTR lpwOutput = NULL;
-
-	if (FAILED(g_lpStream->lpVtbl->Stat(g_lpStream, &ssStreamData, STATFLAG_NONAME))) {
-		return;
-	}
-
-	cbSize = ssStreamData.cbSize.LowPart;
-	lpwOutput = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, cbSize + 1);
-	if (lpwOutput != NULL) {
-		pos.QuadPart = 0;
-		if (FAILED(g_lpStream->lpVtbl->Seek(g_lpStream, pos, STREAM_SEEK_SET, NULL))) {
-			goto CleanUp;
-		}
-
-		if (FAILED(g_lpStream->lpVtbl->Read(g_lpStream, lpwOutput, (ULONG)cbSize, &cbRead))) {		
-			goto CleanUp;
-		}
-
-		BeaconPrintf(CALLBACK_OUTPUT, "%ls", lpwOutput);
-	}
-
-CleanUp:
-
-	if (g_lpStream != NULL) {
-		g_lpStream->lpVtbl->Release(g_lpStream);
-		g_lpStream = NULL;
-	}
-
-	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$free(g_lpwPrintBuffer);
-		g_lpwPrintBuffer = NULL;
-	}
-
-	if (lpwOutput != NULL) {
-		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, lpwOutput);
-	}
-
-	return;
+void internal_printf(const char* format, ...){
+    int buffersize = 0;
+    int transfersize = 0;
+    char * curloc = NULL;
+    char* intBuffer = NULL;
+    va_list args;
+    va_start(args, format);
+    buffersize = MSVCRT$vsnprintf(NULL, 0, format, args); 
+    va_end(args);
+    
+    if (buffersize == -1) return;
+    
+    char* transferBuffer = (char*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, bufsize);
+	intBuffer = (char*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, buffersize);
+    va_start(args, format);
+    MSVCRT$vsnprintf(intBuffer, buffersize, format, args); 
+    va_end(args);
+    if(buffersize + currentoutsize < bufsize) 
+    {
+        MSVCRT$memcpy(output+currentoutsize, intBuffer, buffersize);
+        currentoutsize += buffersize;
+    } else {
+        curloc = intBuffer;
+        while(buffersize > 0)
+        {
+            transfersize = bufsize - currentoutsize;
+            if(buffersize < transfersize) 
+            {
+                transfersize = buffersize;
+            }
+            MSVCRT$memcpy(output+currentoutsize, curloc, transfersize);
+            currentoutsize += transfersize;
+            if(currentoutsize == bufsize)
+            {
+                printoutput(FALSE); 
+            }
+            MSVCRT$memset(transferBuffer, 0, transfersize); 
+            curloc += transfersize; 
+            buffersize -= transfersize;
+        }
+    }
+	KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, intBuffer);
+	KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, transferBuffer);
 }
+
+void printoutput(BOOL done) {
+    char * msg = NULL;
+    BeaconOutput(CALLBACK_OUTPUT, output, currentoutsize);
+    currentoutsize = 0;
+    MSVCRT$memset(output, 0, bufsize);
+    if(done) {MSVCRT$free(output); output=NULL;}
+}
+//END TrustedSec BOF print code.
 
 
 
@@ -115,7 +95,7 @@ BOOL FindDotNet() {
 	OBJECT_ATTRIBUTES objectAttributes;
 	BOOL dotNetFound = FALSE;
 	LPCSTR procName;
-	WCHAR WCprocName[256];
+	//WCHAR WCprocName[256];
 	
 	NtGetNextProcess_t pNtGetNextProcess = (NtGetNextProcess_t) GetProcAddress(GetModuleHandle("ntdll.dll"), "NtGetNextProcess");
 	NtOpenSection_t pNtOpenSection = (NtOpenSection_t) GetProcAddress(GetModuleHandle("ntdll.dll"), "NtOpenSection");
@@ -127,8 +107,8 @@ BOOL FindDotNet() {
 	WCHAR objPath[] = L"\\BaseNamedObjects\\Cor_Private_IPCBlock_v4_";
 	sectionName.Buffer = (PWSTR)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, 500);
 
-	BeaconPrintToStreamW(L"\nProcess name\t\t\t\t\t\tPID\n");
-	BeaconPrintToStreamW(L"=====================================================================\n");
+	internal_printf("\nProcess name\t\t\t\t\t\tPID\n");
+	internal_printf("=====================================================================\n");
 
 	while (!pNtGetNextProcess(currentProc, MAXIMUM_ALLOWED, 0, 0, &currentProc)) {
 		
@@ -154,8 +134,8 @@ BOOL FindDotNet() {
 			KERNEL32$K32GetProcessImageFileNameA(currentProc, psPath, MAX_PATH);
 			procName = SHLWAPI$PathFindFileNameA(psPath);
 			
-			KERNEL32$MultiByteToWideChar(CP_ACP, 0, procName, -1, WCprocName, 256);
-			BeaconPrintToStreamW(L"%-60s\t%d\n", WCprocName, pid);
+			//KERNEL32$MultiByteToWideChar(CP_ACP, 0, procName, -1, WCprocName, 256);
+			internal_printf("%-60s\t%d\n", procName, pid);
 			
 			dotNetFound = TRUE;
 		}
@@ -168,16 +148,16 @@ BOOL FindDotNet() {
 int go(void) {
 	BOOL res = NULL;
 	
+	if(!bofstart()) return;
+	
 	res = FindDotNet();
 	if(!res) {
 		BeaconPrintf(CALLBACK_ERROR, "No .NET process found!");
 	}
 	else {
-		BeaconOutputStreamW();
+		printoutput(TRUE);
 	}
-	
-	
-	
+
 	return 0;
 }
 

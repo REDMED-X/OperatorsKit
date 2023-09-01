@@ -9,95 +9,76 @@
 #include "beacon.h"
 
 
+//START TrustedSec BOF print code: https://github.com/trustedsec/CS-Situational-Awareness-BOF/blob/master/src/common/base.c
+#ifndef bufsize
+#define bufsize 8192
+#endif
+char *output = 0;  
+WORD currentoutsize = 0;
+HANDLE trash = NULL; 
+int bofstart();
+void internal_printf(const char* format, ...);
+void printoutput(BOOL done);
 
-//https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
-HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
-	HRESULT hr = S_FALSE;
-	va_list argList;
-	DWORD dwWritten = 0;
-
-	if (g_lpStream <= (LPSTREAM)1) {
-		hr = OLE32$CreateStreamOnHGlobal(NULL, TRUE, &g_lpStream);
-		if (FAILED(hr)) {
-			return hr;
-		}
-	}
-
-	if (g_lpwPrintBuffer <= (LPWSTR)1) { 
-		g_lpwPrintBuffer = (LPWSTR)MSVCRT$calloc(MAX_STRING, sizeof(WCHAR));
-		if (g_lpwPrintBuffer == NULL) {
-			hr = E_FAIL;
-			goto CleanUp;
-		}
-	}
-
-	va_start(argList, lpwFormat);
-	if (!MSVCRT$_vsnwprintf_s(g_lpwPrintBuffer, MAX_STRING, MAX_STRING -1, lpwFormat, argList)) {
-		hr = E_FAIL;
-		goto CleanUp;
-	}
-
-	if (g_lpStream != NULL) {
-		if (FAILED(hr = g_lpStream->lpVtbl->Write(g_lpStream, g_lpwPrintBuffer, (ULONG)MSVCRT$wcslen(g_lpwPrintBuffer) * sizeof(WCHAR), &dwWritten))) {
-			goto CleanUp;
-		}
-	}
-
-	hr = S_OK;
-
-CleanUp:
-
-	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$memset(g_lpwPrintBuffer, 0, MAX_STRING * sizeof(WCHAR)); 
-	}
-
-	va_end(argList);
-	return hr;
+int bofstart() {   
+    output = (char*)MSVCRT$calloc(bufsize, 1);
+    currentoutsize = 0;
+    return 1;
 }
 
-//https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
-VOID BeaconOutputStreamW() {
-	STATSTG ssStreamData = { 0 };
-	SIZE_T cbSize = 0;
-	ULONG cbRead = 0;
-	LARGE_INTEGER pos;
-	LPWSTR lpwOutput = NULL;
-
-	if (FAILED(g_lpStream->lpVtbl->Stat(g_lpStream, &ssStreamData, STATFLAG_NONAME))) {
-		return;
-	}
-
-	cbSize = ssStreamData.cbSize.LowPart;
-	lpwOutput = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, cbSize + 1);
-	if (lpwOutput != NULL) {
-		pos.QuadPart = 0;
-		if (FAILED(g_lpStream->lpVtbl->Seek(g_lpStream, pos, STREAM_SEEK_SET, NULL))) {
-			goto CleanUp;
-		}
-
-		if (FAILED(g_lpStream->lpVtbl->Read(g_lpStream, lpwOutput, (ULONG)cbSize, &cbRead))) {		
-			goto CleanUp;
-		}
-
-		BeaconPrintf(CALLBACK_OUTPUT, "%ls", lpwOutput);
-	}
-
-CleanUp:
-	if (g_lpStream != NULL) {
-		g_lpStream->lpVtbl->Release(g_lpStream);
-		g_lpStream = NULL;
-	}
-
-	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$free(g_lpwPrintBuffer); 
-		g_lpwPrintBuffer = NULL;
-	}
-
-	if (lpwOutput != NULL) {
-		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, lpwOutput);
-	}
-	return;
+void internal_printf(const char* format, ...){
+    int buffersize = 0;
+    int transfersize = 0;
+    char * curloc = NULL;
+    char* intBuffer = NULL;
+    va_list args;
+    va_start(args, format);
+    buffersize = MSVCRT$vsnprintf(NULL, 0, format, args); 
+    va_end(args);
+    
+    if (buffersize == -1) return;
+    
+    char* transferBuffer = (char*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, bufsize);
+	intBuffer = (char*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, buffersize);
+    va_start(args, format);
+    MSVCRT$vsnprintf(intBuffer, buffersize, format, args); 
+    va_end(args);
+    if(buffersize + currentoutsize < bufsize) 
+    {
+        MSVCRT$memcpy(output+currentoutsize, intBuffer, buffersize);
+        currentoutsize += buffersize;
+    } else {
+        curloc = intBuffer;
+        while(buffersize > 0)
+        {
+            transfersize = bufsize - currentoutsize;
+            if(buffersize < transfersize) 
+            {
+                transfersize = buffersize;
+            }
+            MSVCRT$memcpy(output+currentoutsize, curloc, transfersize);
+            currentoutsize += transfersize;
+            if(currentoutsize == bufsize)
+            {
+                printoutput(FALSE); 
+            }
+            MSVCRT$memset(transferBuffer, 0, transfersize); 
+            curloc += transfersize; 
+            buffersize -= transfersize;
+        }
+    }
+	KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, intBuffer);
+	KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, transferBuffer);
 }
+
+void printoutput(BOOL done) {
+    char * msg = NULL;
+    BeaconOutput(CALLBACK_OUTPUT, output, currentoutsize);
+    currentoutsize = 0;
+    MSVCRT$memset(output, 0, bufsize);
+    if(done) {MSVCRT$free(output); output=NULL;}
+}
+//END TrustedSec BOF print code.
 
 
 //IID: https://gist.githubusercontent.com/stevemk14ebr/af8053c506ef895cd520f8017a81f913/raw/98944bc6ae995229d5231568a8ae73dd287e8b4f/guids
@@ -149,7 +130,7 @@ BOOL PrintSysmonPID(wchar_t * guid) {
 				pProc->lpVtbl->get_Value(pProc, &vPID);
 				
 				if (vPID.ulVal) {
-					BeaconPrintToStreamW(L"Sysmon procID:\t\t%d\n", vPID.ulVal);
+					internal_printf("Sysmon procID:\t\t%d\n", vPID.ulVal);
 					activeSysmon = TRUE;
 				}
 
@@ -226,13 +207,13 @@ BOOL FindSysmon() {
 			
 			if (!MSVCRT$_wcsicmp(StringGuid, (wchar_t *)guid)) { 
 
-				BeaconPrintToStreamW(L"[!] Sysmon service found:\n===============================================================\n");
+				internal_printf("[!] Sysmon service found:\n===============================================================\n");
 				activeSysmon = PrintSysmonPID(guid);	
 
-				if(!activeSysmon) BeaconPrintToStreamW(L"Sysmon service status:\tStopped\n");
-				else BeaconPrintToStreamW(L"Sysmon service status:\tRunning\n");
+				if(!activeSysmon) internal_printf("Sysmon service status:\tStopped\n");
+				else internal_printf("Sysmon service status:\tRunning\n");
 				
-				BeaconPrintToStreamW(L"Sysmon provider name:\t%s\nSysmon provider GUID:\t%s\n", (LPWSTR)((PBYTE)(penum)+penum->TraceProviderInfoArray[i].ProviderNameOffset), StringGuid); 
+				internal_printf("Sysmon provider name:\t%ls\nSysmon provider GUID:\t%ls\n", (LPWSTR)((PBYTE)(penum)+penum->TraceProviderInfoArray[i].ProviderNameOffset), StringGuid); 
 				if (penum) {
 					MSVCRT$free(penum);
 					penum = NULL;
@@ -273,7 +254,7 @@ int PrintMiniFilterData(FILTER_AGGREGATE_STANDARD_INFORMATION * lpFilterInfo) {
 	MSVCRT$memcpy(fltAlt, (void *) src, fltAlt_size);	
 	
 	if (fltInfo->Flags == FLTFL_ASI_IS_MINIFILTER) {
-		BeaconPrintToStreamW(L"%-29s%s\t%26d\n", fltName, fltAlt, fltInfo->Type.MiniFilter.NumberOfInstances);
+		internal_printf("%-29ls%ls\t%26d\n", fltName, fltAlt, fltInfo->Type.MiniFilter.NumberOfInstances);
 	}
 	MSVCRT$free(fltName);
 	MSVCRT$free(fltAlt);	
@@ -294,8 +275,8 @@ BOOL FindMiniFilters() {
 	if (res == HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS)) return foundMinifilter;
 	if (res != S_OK) return foundMinifilter;
 	
-	BeaconPrintToStreamW(L"[+] Found MiniFilter drivers.\n[*] Check if you can identify one that is associated with Sysmon (e.g. SysmonDrv):\n\n");
-	BeaconPrintToStreamW(L"Name Minifilter\t\tPriority altitude\t\tLoaded instances\n=======================================================================\n");
+	internal_printf("[+] Found MiniFilter drivers.\n[*] Check if you can identify one that is associated with Sysmon (e.g. SysmonDrv):\n\n");
+	internal_printf("Name Minifilter\t\tPriority altitude\t\tLoaded instances\n=======================================================================\n");
 	PrintMiniFilterData((FILTER_AGGREGATE_STANDARD_INFORMATION *) lpFilterInfo);
 	foundMinifilter = TRUE;
 
@@ -319,6 +300,7 @@ int go(char *args, int len) {
 	
 	BeaconDataParse(&parser, args, len);
 	action = BeaconDataExtract(&parser, NULL);
+	if(!bofstart()) return;
 	
 	if (MSVCRT$strcmp(action, "reg") == 0) {
 		res = FindSysmon();
@@ -327,20 +309,17 @@ int go(char *args, int len) {
 			return 0;
 		}
 		else  {
-			BeaconOutputStreamW();
-			BeaconPrintf(CALLBACK_OUTPUT, "[+] DONE");
+			printoutput(TRUE);
 		}
 	}
 	else if (MSVCRT$strcmp(action, "driver") == 0) {
 		res = FindMiniFilters();
 		if(!res) {
-			BeaconPrintf(CALLBACK_ERROR,"[-] Couldn't list Minifilter drivers (high enough privileges?)\n");
+			BeaconPrintf(CALLBACK_ERROR,"Couldn't list Minifilter drivers. Running with high enough privileges?\n");
 			return 0;
 		}
 		else  {
-			BeaconOutputStreamW();
-			BeaconPrintf(CALLBACK_OUTPUT, "[+] DONE");
-
+			printoutput(TRUE);
 		}
 	}
 	else {

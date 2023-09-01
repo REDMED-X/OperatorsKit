@@ -2,7 +2,7 @@
 
 beacon_command_register(
 	"systeminfo", "Enumerate system information.",
-	"INFO:\nEnumerate system information via WMI.\n" .
+	"INFO:\nEnumerate system information via WMI.\n\n" .
 	"USAGE:\nsysteminfo\n\n");
 	
 alias systeminfo {

