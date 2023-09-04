@@ -1,0 +1,34 @@
+# author REDMED-X
+
+beacon_command_register(
+	"delfirewallrule", "Delete a firewall rule.",
+	"INFO:\nDelete a firewall rule using COM.\n\n" .
+	"ARGUMENTS:\n[<rule name>]: the name of the firewall rule you want to delete.\n\n" .
+	"USAGE:\ndelfirewallrule \"<rule name>\"\n\n" .
+	"EXAMPLES:\ndelfirewallrule \"ExampleRuleName1\"\n\n");
+	
+alias delfirewallrule {
+    $bid = $1;
+    $name = $2;
+	
+    if ($name eq "") {
+        berror($bid, "Please specify the name of the firewall rule you want to delete.\n");
+        return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("delfirewallrule.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "Z", $name);
+
+    blog($bid, "Tasked to delete a new firewall rule..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
+
+

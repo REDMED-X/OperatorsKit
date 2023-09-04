@@ -1,0 +1,53 @@
+# author REDMED-X
+
+beacon_command_register(
+	"addfirewallrule", "Add a new inbound/outbound firewall rule.",
+	"INFO:\nAdd a new inbound/outbound firewall rule using COM.\n\n" .
+	"ARGUMENTS:\n[<direction>]: specify \"in\" for inbound or \"out\" for outbound.\n[<port>]: specify a single port (80) or port range (80-1000)\n[<rule name>]: specify the name of the new rule.\n[<rule group>]: specify the name of the rule group OR leave empty.\n[<description>]: specify the description of the new rule OR leave empty.\n\n" .
+	"USAGE:\naddfirewallrule <direction> <port> \"<rule name>\" \"<rule group>\" \"<description>\"\n\n" .
+	"EXAMPLES:\naddfirewallrule in 80 \"ExampleRuleName1\" \"ExampleGroup1\" \"Test rule\"\naddfirewallrule out 80-1000 \"ExampleRuleName2\" \n\n");
+	
+alias addfirewallrule {
+    $bid = $1;
+    $direction = $2;
+    $port = $3;
+    $name = $4;
+	$group = $5;
+	$description = $6;
+
+    if ($direction eq "") {
+        berror($bid, "Please specify one of the following rule options: in | out\n");
+        return;
+    }
+
+    if ($direction eq "in" || $direction eq "out") {
+        if ($port eq "") {
+            berror($bid, "Please specify a single port or port range.\n");
+            return;
+        }
+        if ($name eq "") {
+            berror($bid, "Please specify a name of the new firewall rule.\n");
+            return;
+        }
+    }
+    else {
+        berror($bid, "This option isn't supported. Please specify one of the following options: in | out\n");
+        return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("addfirewallrule.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "zZZZZ", $direction, $port, $name, $group, $description);
+
+    blog($bid, "Tasked to add a new firewall rule..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
+
+

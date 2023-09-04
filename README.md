@@ -6,11 +6,13 @@ The following tools are currently in the operators' kit:
 
 |Name|Decription|
 |----|----------|
+|**[AddFirewallRule](KIT/AddFirewallRule)**|Add a new inbound/outbound firewall rule.|
 |**[AddLocalCert](KIT/AddLocalCert)**|Add a (self signed) certificate to a specific local computer certificate store.|
 |**[AddTaskScheduler](KIT/AddTaskScheduler)**|Create a scheduled task on the current- or remote host.|
 |**[BlindEventlog](KIT/BlindEventlog)**|Blind Eventlog by suspending its threads.|
 |**[CaptureNetNTLM](KIT/CaptureNetNTLM)**|Capture the NetNTLMv2 hash of the current user.|
 |**[CredPrompt](KIT/CredPrompt)**|Start persistent credential prompt in an attempt to capture user credentials.|
+|**[DelFirewallRule](KIT/DelFirewallRule)**|Delete a firewall rule.|
 |**[DelLocalCert](KIT/DelLocalCert)**|Delete a local computer certificate from a specific store.|
 |**[DelTaskScheduler](KIT/DelTaskScheduler)**|Delete a scheduled task on the current- or a remote host.|
 |**[DllEnvHijacking](KIT/DllEnvHijacking)**|BOF implementation of DLL environment hijacking published by [Wietze](https://www.wietzebeukema.nl/blog/save-the-environment-variables).|
@@ -39,4 +41,4 @@ Each individual tool has its own README file with usage information and compile 
 ## Credits
 A round of virtual applause to [reenz0h](https://twitter.com/SEKTOR7net). Lots of tools in this kit are based on his code examples from the Malware Development and Windows Evasion courses. I highly recommend purchasing them!
 
-Furthermore, some code from the [CS-Situational-Awareness-BOF](https://github.com/trustedsec/CS-Situational-Awareness-BOF/blob/master/src/common/base.c) project is copied to neatly print beacon output. 
+Furthermore, some code from the [CS-Situational-Awareness-BOF](https://github.com/trustedsec/CS-Situational-Awareness-BOF/blob/master/src/common/base.c) project is used to neatly print beacon output. 
