@@ -6,6 +6,7 @@ The following tools are currently in the operators' kit:
 
 |Name|Decription|
 |----|----------|
+|**[AddExclusion](KIT/AddExclusion)**|Add a new exclusion to Windows Defender for a folder, file, process or extension.|
 |**[AddFirewallRule](KIT/AddFirewallRule)**|Add a new inbound/outbound firewall rule.|
 |**[AddLocalCert](KIT/AddLocalCert)**|Add a (self signed) certificate to a specific local computer certificate store.|
 |**[AddTaskScheduler](KIT/AddTaskScheduler)**|Create a scheduled task on the current- or remote host.|
@@ -20,7 +21,9 @@ The following tools are currently in the operators' kit:
 |**[EnumSecProducts](KIT/EnumSecProducts)**|Enumerate security products (like AV/EDR) that are running on the current/remote host.|
 |**[EnumShares](KIT/EnumShares)**|Enumerate remote shares and your access level using a predefined list with hostnames.|
 |**[EnumTaskScheduler](KIT/EnumTaskScheduler)**|Enumerate all scheduled tasks in the root folder.|
+|**[EnumWSC](KIT/EnumWSC)**|List what security products are registered in Windows Security Center.|
 |**[FindDotnet](KIT/FindDotnet)**|Find processes that most likely have .NET loaded.|
+|**[FindExclusions](KIT/FindExclusions)**|Check the AV for excluded files, folders, extentions and processes.|
 |**[FindFile](KIT/FindFile)**|Search for matching files based on a word, extention or keyword in the file content.|
 |**[FindHandle](KIT/FindHandle)**|Find "process" and "thread" handle types between processes.|
 |**[FindLib](KIT/FindLib)**|Find loaded module(s) in remote process(es).|

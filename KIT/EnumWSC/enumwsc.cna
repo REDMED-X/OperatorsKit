@@ -1,0 +1,33 @@
+# author REDMED-X
+
+beacon_command_register(
+	"enumwsc", "List what security products are registered in Windows Security Center.\n",
+	"INFO:\nGet a list of security products (antivirus, firewall, antispyware) that are registered in Windows Security Center. This only works if WSC is running (typically only on Windows clients).\n\n" .
+	"ARGUMENTS:\n[option]: specify one of the following options to request related security information from WSC: av (antivirus), fw (firewall), as (antispyware).\n\n" .
+	"USAGE:\nenumwsc <option>\n\n" .
+	"EXAMPLES:\nenumwsc av\n\n");
+	
+alias enumwsc {
+    $bid = $1;
+    $option = $2;
+
+	# Verify user input
+	if ($option eq "") {
+		berror($bid, "Please specify one of the following options: av | fw | as\n");
+		return;
+	}
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("enumwsc.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data  = bof_pack($bid, "z", $option);
+	
+	blog($bid, "Tasked to enumerate security products registered in Windows Security Center..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
