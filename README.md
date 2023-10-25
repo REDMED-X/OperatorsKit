@@ -4,7 +4,7 @@ This repository contains a collection of tools that integrate with Cobalt Strike
 ## Kit content
 The following tools are currently in the operators' kit: 
 
-|Name|Decription|
+|Name|Description|
 |----|----------|
 |**[AddExclusion](KIT/AddExclusion)**|Add a new exclusion to Windows Defender for a folder, file, process or extension.|
 |**[AddFirewallRule](KIT/AddFirewallRule)**|Add a new inbound/outbound firewall rule.|
