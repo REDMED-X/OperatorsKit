@@ -13,8 +13,8 @@ The following tools are currently in the OperatorsKit:
 |**[BlindEventlog](KIT/BlindEventlog)**|Blind Eventlog by suspending its threads.|
 |**[CaptureNetNTLM](KIT/CaptureNetNTLM)**|Capture the NetNTLMv2 hash of the current user.|
 |**[CredPrompt](KIT/CredPrompt)**|Start persistent credential prompt in an attempt to capture user credentials.|
-|**[DelFirewallRule](KIT/DelFirewallRule)**|Delete a firewall rule.|
 |**[DelExclusion](KIT/DelExclusion)**|Delete an exclusion from Windows Defender for a folder, file, process or extension.|
+|**[DelFirewallRule](KIT/DelFirewallRule)**|Delete a firewall rule.|
 |**[DelLocalCert](KIT/DelLocalCert)**|Delete a local computer certificate from a specific store.|
 |**[DelTaskScheduler](KIT/DelTaskScheduler)**|Delete a scheduled task on the current- or a remote host.|
 |**[DllEnvHijacking](KIT/DllEnvHijacking)**|BOF implementation of DLL environment hijacking published by [Wietze](https://www.wietzebeukema.nl/blog/save-the-environment-variables).|
