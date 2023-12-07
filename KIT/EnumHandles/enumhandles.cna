@@ -1,0 +1,62 @@
+# author REDMED-X
+
+beacon_command_register(
+    "enumhandles", "Find process and thread handle types between processes.",
+    "INFO:\nFind process and thread handle types between processes.\n\nOPTIONS:\n[all]: list all processes with handles to all other processes\n[h2p]: list all processes that have a handle to a specific process\n[p2h]: list handles from a specific process to all other processes\n\nHandle Query Options:\n[proc]: search for PROCESS type handles\n[thread]: search for THREAD type handles\n\nTargeted Search Options:\n[<pid>]: for both the [h2p] and [p2h] search options, specify the PID of the process your interested in.\n\n" .
+    "USAGE:\nenumhandles all <proc | thread>\nenumhandles h2p <proc | thread> <pid>\nenumhandles p2h <proc | thread> <pid>\n\n");
+
+
+alias enumhandles {
+    $bid = $1;
+    $search = $2;
+    $query = $3;
+    $pid = $4;
+
+    if ($search eq "") {
+        berror($bid, "Please specify one of the following seach options: all | h2p | p2h\n");
+        return;
+    }
+
+    if ($search eq "all" || $search eq "h2p" || $search eq "p2h") {
+        if ($query eq "") {
+            berror($bid, "Please specify one of the following handle types to search for: proc | thread\n");
+            return;
+        }
+        if ($query eq "proc" || $query eq "thread") {
+            if ($search eq "h2p" && $pid eq "" ) {
+                berror($bid, "Please specify the pid to target a specific process.\n");
+                return;
+            }
+            if ($search eq "p2h" && $pid eq "" ) {
+                berror($bid, "Please specify the pid to target a specific process.\n");
+                return;
+            }
+        }
+        else {
+            berror($bid, "This handle type isn't supported. Please specify one of the following handle types to search for: proc | thread\n");
+            return;
+        }
+    }
+    else {
+        berror($bid, "This option isn't supported. Please specify one of the following seach options: all | h2p | p2h\n");
+        return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("enumhandles.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    if ($pid eq "") {
+        $arg_data  = bof_pack($bid, "zz", $search, $query);
+    }
+    else {
+        $arg_data  = bof_pack($bid, "zzi", $search, $query, $pid);
+    }
+
+    blog($bid, "Tasked to enumerate handles..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+

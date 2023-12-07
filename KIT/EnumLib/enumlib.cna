@@ -1,0 +1,53 @@
+# author REDMED-X
+
+beacon_command_register(
+    "enumlib", "Find loaded module(s) in remote process(es)",
+    "INFO:\nFind a specific loaded module in all processes OR list all loaded modules in a specific process.\n\nOPTIONS:\n[search]: find all processes that have loaded a specific module (e.g. winhttp.dll or ws2_32.dll).\n[list]: list all loaded modules in a remote process.\n\n" .
+    "USAGE:\nenumlib search <module name>\nenumlib list <pid>\n\n");
+	
+
+
+alias enumlib {
+    $bid = $1;
+    $option = $2;
+    $target = $3;
+
+    if ($option eq "") {
+        berror($bid, "Please specify one of the following enumeration options: search | list\n");
+        return;
+    }
+
+    if ($option eq "search" || $option eq "list") {
+        if ($option eq "search" && $target eq "") {
+            berror($bid, "Please specify a module name to search for\n");
+            return;
+        }
+
+        if ($option eq "list" && $target eq "") {
+            berror($bid, "Please specify the pid of the target process to enumerate\n");
+            return;
+        }
+    }
+    else {
+        berror($bid, "This enumeration option isn't supported. Please specify one of the following enumeration options: search | list\n");
+        return;
+    }
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("enumlib.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    if ($option eq "search") {
+       $arg_data  = bof_pack($bid, "zz", $option, $target);
+    }
+    else {
+        $arg_data  = bof_pack($bid, "zi", $option, $target);
+    }
+
+    blog($bid, "Tasked to enumerate loaded modules..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+

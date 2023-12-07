@@ -15,8 +15,8 @@ Add a new exclusion to Windows Defender for a folder, file, process or extension
 
 ## Example
 * `addexclusion path C:\Users\Public\Downloads`
-* `addexclusion process example.exe`
-* `addexclusion extension .xll`
+* `addexclusion process C:\Windows\System32\example.exe`
+* `addexclusion extension *.xll`
 
 
 ## Compile

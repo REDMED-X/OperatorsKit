@@ -1,8 +1,8 @@
 # OperatorsKit
-This repository contains a collection of tools that integrate with Cobalt Strike through Beacon Object Files (BOFs).  
+This repository contains a collection of Beacon Object Files (BOFs) that integrate with Cobalt Strike.  
 
 ## Kit content
-The following tools are currently in the operators' kit: 
+The following tools are currently in the OperatorsKit: 
 
 |Name|Description|
 |----|----------|
@@ -14,22 +14,23 @@ The following tools are currently in the operators' kit:
 |**[CaptureNetNTLM](KIT/CaptureNetNTLM)**|Capture the NetNTLMv2 hash of the current user.|
 |**[CredPrompt](KIT/CredPrompt)**|Start persistent credential prompt in an attempt to capture user credentials.|
 |**[DelFirewallRule](KIT/DelFirewallRule)**|Delete a firewall rule.|
+|**[DelExclusion](KIT/DelExclusion)**|Delete an exclusion from Windows Defender for a folder, file, process or extension.|
 |**[DelLocalCert](KIT/DelLocalCert)**|Delete a local computer certificate from a specific store.|
 |**[DelTaskScheduler](KIT/DelTaskScheduler)**|Delete a scheduled task on the current- or a remote host.|
 |**[DllEnvHijacking](KIT/DllEnvHijacking)**|BOF implementation of DLL environment hijacking published by [Wietze](https://www.wietzebeukema.nl/blog/save-the-environment-variables).|
+|**[EnumDotnet](KIT/EnumDotnet)**|Enumerate processes that most likely have .NET loaded.|
+|**[EnumExclusions](KIT/EnumExclusions)**|Check the AV for excluded files, folders, extentions and processes.|
+|**[EnumFile](KIT/EnumFile)**|Search for matching files based on a word, extention or keyword in the file content.|
+|**[EnumHandle](KIT/EnumHandle)**|Enumerate "process" and "thread" handle types between processes.|
+|**[EnumLib](KIT/EnumLib)**|Enumerate loaded module(s) in remote process(es).|
 |**[EnumLocalCert](KIT/EnumLocalCert)**|Enumerate all local computer certificates from a specific store.|
+|**[EnumRWX](KIT/EnumRWX)**|Enumerate RWX memory regions in a target process.|
 |**[EnumSecProducts](KIT/EnumSecProducts)**|Enumerate security products (like AV/EDR) that are running on the current/remote host.|
 |**[EnumShares](KIT/EnumShares)**|Enumerate remote shares and your access level using a predefined list with hostnames.|
+|**[EnumSysmon](KIT/EnumSysmon)**|Verify if Sysmon is running by checking the registry and listing Minifilter drivers.|
 |**[EnumTaskScheduler](KIT/EnumTaskScheduler)**|Enumerate all scheduled tasks in the root folder.|
+|**[enumWebClient](KIT/EnumWebClient)**|Find hosts with the WebClient service running based on a list with predefined hostnames.|
 |**[EnumWSC](KIT/EnumWSC)**|List what security products are registered in Windows Security Center.|
-|**[FindDotnet](KIT/FindDotnet)**|Find processes that most likely have .NET loaded.|
-|**[FindExclusions](KIT/FindExclusions)**|Check the AV for excluded files, folders, extentions and processes.|
-|**[FindFile](KIT/FindFile)**|Search for matching files based on a word, extention or keyword in the file content.|
-|**[FindHandle](KIT/FindHandle)**|Find "process" and "thread" handle types between processes.|
-|**[FindLib](KIT/FindLib)**|Find loaded module(s) in remote process(es).|
-|**[FindRWX](KIT/FindRWX)**|Find RWX memory regions in a target process.|
-|**[FindSysmon](KIT/FindSysmon)**|Verify if Sysmon is running by checking the registry and listing Minifilter drivers.|
-|**[FindWebClient](KIT/FindWebClient)**|Find hosts with the WebClient service running based on a list with predefined hostnames.|
 |**[ForceLockScreen](KIT/ForceLockScreen)**|Force the lock screen of the current user session.|
 |**[HideFile](KIT/HideFile)**|Hide a file or directory by setting it's attributes to systemfile + hidden.|
 |**[IdleTime](KIT/IdleTime)**|Check current user activity based on the user's last input.|
@@ -41,7 +42,9 @@ The following tools are currently in the operators' kit:
 ## Usage
 Each individual tool has its own README file with usage information and compile instructions. 
 
+It is also possible to directly import all tools by loading the `OperatorsKit.cna` script using the Cobalt Strike script manager. Furthermore, mass compiling can now be done using the `compile_all.bat` script from within the `x64 Native Tools Command Prompt for VS <2019/2022>` terminal. 
+
 ## Credits
-A round of virtual applause to [reenz0h](https://twitter.com/SEKTOR7net). Lots of tools in this kit are based on his code examples from the Malware Development and Windows Evasion courses. I highly recommend purchasing them!
+A round of virtual applause to [reenz0h](https://twitter.com/SEKTOR7net). Multiple tools in this kit are based on his code examples from the Malware Development and Windows Evasion courses. I highly recommend purchasing them!
 
 Furthermore, some code from the [CS-Situational-Awareness-BOF](https://github.com/trustedsec/CS-Situational-Awareness-BOF/blob/master/src/common/base.c) project is used to neatly print beacon output. 

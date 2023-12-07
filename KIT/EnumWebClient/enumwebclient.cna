@@ -1,0 +1,38 @@
+# author REDMED-X
+
+beacon_command_register(
+	"enumwebclient", "Find running WebClient services.",
+	"INFO:\nFind hosts with the WebClient service running based on a list with predefined hostnames or IP addresses. The list is loaded from your own attacker system.\n\n" .
+	"ARGUMENTS:\n[<path to file>]: the path on your own attacker system to the file containing the list with predefined hostnames. Each hostname must be newline separated.\n[debug]: optional argument to include hostnames in the output that couldn't be reached or on which the WebClient was not running.\n\n" .
+	"USAGE:\nenumwebclient <path to hostname file> [opt:debug]\n\n" .
+	"EXAMPLES:\nenumwebclient C:\\Users\\redmed\\Documents\\hostnames.txt\nenumwebclient C:\\Users\\redmed\\Documents\\hostnames.txt debug\n\n");
+	
+alias enumwebclient {
+    $bid = $1;
+	$path = $2;
+	$debug = $3;
+	
+	if ($path eq "") {
+		berror($bid, "Please specify the path on your own attacker system to the file containing the list with newline separated hostnames.\n");
+		return;
+	}
+
+	
+	# read in the .txt file
+	$handle = openf("$path");
+	$file = readb($handle, -1);
+	closef($handle);
+	
+	blog($bid, "path: $+  $path");
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("enumwebclient.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data = bof_pack($bid, "bz", $file, $debug);
+
+	blog($bid, "Tasked to find running WebClient services..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}

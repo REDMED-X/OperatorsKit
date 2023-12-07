@@ -1,0 +1,30 @@
+# author REDMED-X
+
+beacon_command_register(
+    "enumrwx", "Enumerate RWX memory regions in a target process.",
+    "INFO:\nFind processes that already have memory allocated for read/write/execute (like most .NET processes)\n\nOPTIONS:\n[pid]: target process to enumerate\n\n" .
+    "USAGE:\nenumrwx <pid>\n\n");
+
+alias enumrwx {
+    $bid = $1;
+    $pid = $2;
+
+    if ($pid eq "") {
+        berror($bid, "Please make sure that the PID of the target process is specified.");
+        return;
+    }
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("enumrwx.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "i", $pid);
+
+    blog($bid, "Tasked to verify if the target process has RWX memory regions..");
+
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
