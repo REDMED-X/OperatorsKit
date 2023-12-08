@@ -20,8 +20,8 @@ The following tools are currently in the OperatorsKit:
 |**[DllEnvHijacking](KIT/DllEnvHijacking)**|BOF implementation of DLL environment hijacking published by [Wietze](https://www.wietzebeukema.nl/blog/save-the-environment-variables).|
 |**[EnumDotnet](KIT/EnumDotnet)**|Enumerate processes that most likely have .NET loaded.|
 |**[EnumExclusions](KIT/EnumExclusions)**|Check the AV for excluded files, folders, extentions and processes.|
-|**[EnumFile](KIT/EnumFile)**|Search for matching files based on a word, extention or keyword in the file content.|
-|**[EnumHandle](KIT/EnumHandle)**|Enumerate "process" and "thread" handle types between processes.|
+|**[EnumFiles](KIT/EnumFiles)**|Search for matching files based on a word, extention or keyword in the file content.|
+|**[EnumHandles](KIT/EnumHandles)**|Enumerate "process" and "thread" handle types between processes.|
 |**[EnumLib](KIT/EnumLib)**|Enumerate loaded module(s) in remote process(es).|
 |**[EnumLocalCert](KIT/EnumLocalCert)**|Enumerate all local computer certificates from a specific store.|
 |**[EnumRWX](KIT/EnumRWX)**|Enumerate RWX memory regions in a target process.|
