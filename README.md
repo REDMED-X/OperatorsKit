@@ -17,6 +17,7 @@ The following tools are currently in the OperatorsKit:
 |**[DelFirewallRule](KIT/DelFirewallRule)**|Delete a firewall rule.|
 |**[DelLocalCert](KIT/DelLocalCert)**|Delete a local computer certificate from a specific store.|
 |**[DelTaskScheduler](KIT/DelTaskScheduler)**|Delete a scheduled task on the current- or a remote host.|
+|**[DllComHijacking](KIT/DllComHijacking)**|Leverage DLL Hijacking by instantiating a COM object on a target host |
 |**[DllEnvHijacking](KIT/DllEnvHijacking)**|BOF implementation of DLL environment hijacking published by [Wietze](https://www.wietzebeukema.nl/blog/save-the-environment-variables).|
 |**[EnumDotnet](KIT/EnumDotnet)**|Enumerate processes that most likely have .NET loaded.|
 |**[EnumExclusions](KIT/EnumExclusions)**|Check the AV for excluded files, folders, extentions and processes.|

