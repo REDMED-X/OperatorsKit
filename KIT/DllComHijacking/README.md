@@ -5,7 +5,7 @@ This tool is capable of instantiating a COM object based on a provided CLSID on 
 
 Below are a couple examples (in some casus, there are multiple missing DLL's):
 | CLSID | Process | DLL hijacking option | 
-| --- | --- | --- | --- |
+| --- | --- | --- | 
 | {94E03510-31B9-47a0-A44E-E932AC86BB17} | wmlaunch.exe | C:\Program Files\Windows Media Player\MPR.dll |
 | {494C063B-1024-4DD1-89D3-713784E82044} | PrintBrmEngine.exe | C:\Windows\System32\spool\tools\VERSION.dll |
 | {73FDDC80-AEA9-101A-98A7-00AA00374959} | wordpad.exe | C:\Program Files\Windows NT\Accessories\MFC42u.dll |
