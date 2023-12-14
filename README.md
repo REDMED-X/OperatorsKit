@@ -35,6 +35,7 @@ The following tools are currently in the OperatorsKit:
 |**[ForceLockScreen](KIT/ForceLockScreen)**|Force the lock screen of the current user session.|
 |**[HideFile](KIT/HideFile)**|Hide a file or directory by setting it's attributes to systemfile + hidden.|
 |**[IdleTime](KIT/IdleTime)**|Check current user activity based on the user's last input.|
+|**[InjectPoolParty](KIT/InjectPoolParty)**|Inject beacon shellcode and execute it via [Windows Thread Pools](https://github.com/SafeBreach-Labs/PoolParty/)|
 |**[LoadLib](KIT/LoadLib)**|Load an on disk present DLL via RtlRemoteCall API in a remote process.|
 |**[PSremote](KIT/PSremote)**|Enumerate all running processes on a remote host.|
 |**[SilenceSysmon](KIT/SilenceSysmon)**|Silence the Sysmon service by patching its capability to write ETW events to the log.|
