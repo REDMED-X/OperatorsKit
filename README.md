@@ -20,6 +20,7 @@ The following tools are currently in the OperatorsKit:
 |**[DllComHijacking](KIT/DllComHijacking)**|Leverage DLL Hijacking by instantiating a COM object on a target host |
 |**[DllEnvHijacking](KIT/DllEnvHijacking)**|BOF implementation of DLL environment hijacking published by [Wietze](https://www.wietzebeukema.nl/blog/save-the-environment-variables).|
 |**[EnumDotnet](KIT/EnumDotnet)**|Enumerate processes that most likely have .NET loaded.|
+|**[EnumDrives](KIT/EnumDrives)**|Enumerate drive letters and type.|
 |**[EnumExclusions](KIT/EnumExclusions)**|Check the AV for excluded files, folders, extentions and processes.|
 |**[EnumFiles](KIT/EnumFiles)**|Search for matching files based on a word, extention or keyword in the file content.|
 |**[EnumHandles](KIT/EnumHandles)**|Enumerate "process" and "thread" handle types between processes.|
@@ -38,6 +39,7 @@ The following tools are currently in the OperatorsKit:
 |**[InjectPoolParty](KIT/InjectPoolParty)**|Inject beacon shellcode and execute it via [Windows Thread Pools](https://github.com/SafeBreach-Labs/PoolParty/)|
 |**[LoadLib](KIT/LoadLib)**|Load an on disk present DLL via RtlRemoteCall API in a remote process.|
 |**[PSremote](KIT/PSremote)**|Enumerate all running processes on a remote host.|
+|**[PasswordSpray](KIT/PasswordSpray)**|Validate a single password against multiple accounts using kerberos authentication.|
 |**[SilenceSysmon](KIT/SilenceSysmon)**|Silence the Sysmon service by patching its capability to write ETW events to the log.|
 |**[SystemInfo](KIT/SystemInfo)**|Enumerate system information via WMI (limited use case).|
 
