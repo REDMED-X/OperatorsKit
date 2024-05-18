@@ -1,7 +1,7 @@
 # PasswordSpray
-Validate a single password against multiple accounts using kerberos authentication and a list with predefined usrenames. The list can be loaded from your own attacker system.
+Validate a single password against multiple accounts using kerberos authentication and a list with predefined usernames. The list can be loaded from your own attacker system.
 
->A valid list with usrenames is considered newline separated. 
+>A valid list with usernames is considered newline separated. 
 
 ## Arguments
 * `<path to username file>`: the path on your own attacker system to a file containing the list with usernames. Each username must be newline separated.
