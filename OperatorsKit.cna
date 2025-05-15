@@ -1280,7 +1280,7 @@ alias wifipasswords {
     $bid = $1;
 
     # Read in the right BOF file
-    $handle = openf(script_resource("wifipasswords.o"));
+    $handle = openf(script_resource("KIT/WiFiPasswords/wifipasswords.o"));
     $data   = readb($handle, -1);
     closef($handle);
 
