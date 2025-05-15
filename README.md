@@ -43,6 +43,7 @@ The following tools are currently in the OperatorsKit:
 |**[PasswordSpray](KIT/PasswordSpray)**|Validate a single password against multiple accounts using kerberos authentication.|
 |**[SilenceSysmon](KIT/SilenceSysmon)**|Silence the Sysmon service by patching its capability to write ETW events to the log.|
 |**[SystemInfo](KIT/SystemInfo)**|Enumerate system information via WMI (limited use case).|
+|**[WiFiPasswords](KIT/WiFiPasswords)**|Enumerates all saved SSID's, then retrieves each AP’s stored plaintext password.|
 
 ## Usage
 Each individual tool has its own README file with usage information and compile instructions. 

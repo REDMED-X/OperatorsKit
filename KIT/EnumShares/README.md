@@ -1,7 +1,7 @@
 # EnumShares
 List remote shares and there access level using a list with predefined hostnames or IP addresses. The list is loaded from your own attacker system.
 
->A valid list with hostnames is considered newline separated and ends with a newline. Furthermore, the following hostname notations are correct: `database`, `database.example.local`, `10.100.10.1`.  
+>A valid list with hostnames is considered newline separated. Furthermore, the following hostname notations are correct: `database`, `database.example.local`, `10.100.10.1`.  
 
 ## Arguments
 * `<path to file>`: the path on your own attacker system to the file containing the list with predefined hostnames.
