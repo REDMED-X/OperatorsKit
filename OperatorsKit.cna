@@ -1273,7 +1273,7 @@ alias executecrosssession {
 
 beacon_command_register(
 	"wifipasswords", "Dump all stored Wi-Fi passwords.",
-	"INFO:\nEnumerates all saved SSID's, then retrieves each AP’s stored plaintext password\n\n" .
+	"INFO:\nEnumerates all saved SSID's, then retrieves each AP's stored plaintext password\n\n" .
 	"USAGE:\nwifipasswords\n\n");
 	
 alias wifipasswords {
