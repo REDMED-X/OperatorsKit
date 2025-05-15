@@ -1,7 +1,7 @@
 # author REDMED-X
 
 beacon_command_register(
-	"enumwsc", "List what security products are registered in Windows Security Center.\n",
+	"enumwsc", "List what security products are registered in Windows Security Center.",
 	"INFO:\nGet a list of security products (antivirus, firewall, antispyware) that are registered in Windows Security Center. This only works if WSC is running (typically only on Windows clients).\n\n" .
 	"ARGUMENTS:\n[option]: specify one of the following options to request related security information from WSC: av (antivirus), fw (firewall), as (antispyware).\n\n" .
 	"USAGE:\nenumwsc <option>\n\n" .
