@@ -1,5 +1,5 @@
 # KeyloggerRawInput
-During the first run when the keylogger is starting, the BOF registers for raw input using the RegisterRawInputDevices API and Windows begins capturing every keystroke into its internal raw-input buffer, converting them into WM_INPUT messages and posting them to the beacon process thread's message queue. Each run thereafter when the BOF calls PeekMessageA(..., PM_REMOVE) in a loop, it drains and processes all pending WM_INPUT messages from the raw-input buffer and print the results to the beacon console.
+During the first run, the BOF-keylogger registers for raw input using the RegisterRawInputDevices API and Windows begins capturing every keystroke into its internal raw-input buffer, converting them into WM_INPUT messages and posting them to the beacon thread's message queue. Each run thereafter when the keylogger calls PeekMessageA() in a loop, it will drain and process all pending WM_INPUT messages from the raw-input buffer and print the results to the beacon console.
 
 >Between each run, Windows continues to queue up to 10.000 WM_INPUT messages on the thread - any further keystrokes beyond that are dropped. Therefore, it is recommended to run the BOF atleast every few hours to drain and process the message queue. 
 

