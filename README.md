@@ -17,7 +17,7 @@ The following tools are currently in the OperatorsKit:
 |**[DelFirewallRule](KIT/DelFirewallRule)**|Delete a firewall rule.|
 |**[DelLocalCert](KIT/DelLocalCert)**|Delete a local computer certificate from a specific store.|
 |**[DelTaskScheduler](KIT/DelTaskScheduler)**|Delete a scheduled task on the current- or a remote host.|
-|**[DllComHijacking](KIT/DllComHijacking)**|Leverage DLL Hijacking by instantiating a COM object on a target host |
+|**[DllComHijacking](KIT/DllComHijacking)**|Leverage DLL Hijacking by instantiating a COM object on a target host.|
 |**[DllEnvHijacking](KIT/DllEnvHijacking)**|BOF implementation of DLL environment hijacking.|
 |**[EnumDotnet](KIT/EnumDotnet)**|Enumerate processes that most likely have .NET loaded.|
 |**[EnumDrives](KIT/EnumDrives)**|Enumerate drive letters and type.|
@@ -37,7 +37,8 @@ The following tools are currently in the OperatorsKit:
 |**[ForceLockScreen](KIT/ForceLockScreen)**|Force the lock screen of the current user session.|
 |**[HideFile](KIT/HideFile)**|Hide a file or directory by setting it's attributes to systemfile + hidden.|
 |**[IdleTime](KIT/IdleTime)**|Check current user activity based on the user's last input.|
-|**[InjectPoolParty](KIT/InjectPoolParty)**|Inject beacon shellcode and execute it via Windows Thread Pools|
+|**[InjectPoolParty](KIT/InjectPoolParty)**|Inject beacon shellcode and execute it via Windows Thread Pools.|
+|**[KeyloggerRawInput](KIT/KeyloggerRawInput)**|Keylogger based on RegisterRawInputDevices.|
 |**[LoadLib](KIT/LoadLib)**|Load an on disk present DLL via RtlRemoteCall API in a remote process.|
 |**[PSremote](KIT/PSremote)**|Enumerate all running processes on a remote host.|
 |**[PasswordSpray](KIT/PasswordSpray)**|Validate a single password against multiple accounts using kerberos authentication.|

