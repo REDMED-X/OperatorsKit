@@ -52,6 +52,9 @@ Each individual tool has its own README file with usage information and compile 
 It is also possible to directly import all tools by loading the `OperatorsKit.cna` script using the Cobalt Strike script manager. Furthermore, mass compiling can now be done using the `compile_all.bat` script from within the `x64 Native Tools Command Prompt for VS <2019/2022>` terminal. 
 
 ## Credits
-A round of virtual applause to [reenz0h](https://twitter.com/SEKTOR7net). Multiple tools in this kit are based on his code examples from the Malware Development and Windows Evasion courses. I highly recommend purchasing them!
+A round of virtual applause to everyone who laid the groundwork for the development of several of these tools. Additional credits can be found in each corresponding README file.
 
 Furthermore, some code from the [CS-Situational-Awareness-BOF](https://github.com/trustedsec/CS-Situational-Awareness-BOF/blob/master/src/common/base.c) project is used to neatly print beacon output. 
+
+## 🚀 Support the OperatorsKit
+If the OperatorsKit has been valuable to your red teaming engagements, by saving development time or enhancing your tradecraft, please consider sponsoring its continued development and help drive its next leap forward.
