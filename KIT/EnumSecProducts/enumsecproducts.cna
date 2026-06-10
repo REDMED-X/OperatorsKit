@@ -1,4 +1,4 @@
-# author REDMED-X
+# author Western Tactics
 
 beacon_command_register(
     "enumsecproducts", "List security products running on the current- or remote host.",

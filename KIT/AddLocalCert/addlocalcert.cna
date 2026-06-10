@@ -1,4 +1,4 @@
-# author REDMED-X
+# author Western Tactics
 
 beacon_command_register(
 	"addlocalcert", "Add a self signed certificate to a specified local computer certificate store.",

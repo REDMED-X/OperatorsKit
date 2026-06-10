@@ -1,4 +1,4 @@
-# author REDMED-X
+# author Western Tactics
 
 beacon_command_register(
 	"injectpoolparty", "Inject listener shellcode in specified process and execute it via Windows Thread Pools.",

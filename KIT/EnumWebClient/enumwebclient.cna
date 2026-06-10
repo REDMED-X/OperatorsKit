@@ -1,4 +1,4 @@
-# author REDMED-X
+# author Western Tactics
 
 beacon_command_register(
 	"enumwebclient", "Find running WebClient services.",

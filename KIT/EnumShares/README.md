@@ -1,18 +1,21 @@
 # EnumShares
-List remote shares and there access level using a list with predefined hostnames or IP addresses. The list is loaded from your own attacker system.
+List remote shares and their access level based on a list from your attacker system. This tool performs a quick TCP/445 check to skip offline hosts and uses stealthy attribute checks to verify access.
 
 >A valid list with hostnames is considered newline separated. Furthermore, the following hostname notations are correct: `database`, `database.example.local`, `10.100.10.1`.  
 
 ## Arguments
-* `<path to file>`: the path on your own attacker system to the file containing the list with predefined hostnames.
+* `path`: Path to the host list file on your attacker system.
+* `sleep`: Seconds to wait between each host.
+* `jitter`: Percentage of jitter to apply to the sleep (0-100).
+* `timeout`: (Optional) Port check timeout in milliseconds (default: 300).
 
 
 ## Usage
-* `enumshares <path to hostname file> `
+* `enumshares <path> <sleep> <jitter> <timeout>`
 
 
 ## Examples
-* `enumshares C:\Users\RTO\Documents\hostnames.txt`
+* `enumshares C:\Users\RTO\Documents\hostnames.txt 5 20 500`
 
 
 ## Compile

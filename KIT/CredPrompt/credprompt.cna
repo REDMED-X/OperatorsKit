@@ -1,4 +1,4 @@
-# author REDMED-X
+# author Western Tactics
 
 beacon_command_register(
 	"credprompt", "Start custom Windows credential prompt.",

@@ -1,4 +1,4 @@
-# author REDMED-X
+# author Western Tactics
 
 beacon_command_register(
 	"enumlocalcert", "List all the stored local computer certificates from a specific store.",

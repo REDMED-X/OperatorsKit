@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <taskschd.h>
 #include <combaseapi.h>
+#include <strsafe.h>
 #include "addtaskscheduler.h"
 #include "beacon.h"
 
@@ -188,31 +189,31 @@ HRESULT SetUnlockTask(HRESULT hr, ITriggerCollection* pTriggerCollection, wchar_
     return hr;
 }
 
+BOOL CanReadRemoteWindowsDir(const wchar_t* hostName) {
+    BOOL canRead = FALSE;
+    HANDLE hFile = NULL;
+    wchar_t remotePath[MAX_PATH];
 
-BOOL IsElevated() {
-    BOOL fIsElevated = FALSE;
-    HANDLE hToken = NULL;
-
-    if (ADVAPI32$OpenProcessToken(KERNEL32$GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
-        TOKEN_ELEVATION elevation;
-        DWORD dwSize;
-
-        if (ADVAPI32$GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &dwSize)) {
-            fIsElevated = elevation.TokenIsElevated;
-        }
+    //build unc path
+	USER32$wsprintfW(remotePath, L"\\\\%ls\\C$\\", hostName);
+	
+	hFile = KERNEL32$CreateFileW(remotePath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        canRead = TRUE;
+        KERNEL32$CloseHandle(hFile);
     }
-
-    if (hToken) {
-        KERNEL32$CloseHandle(hToken);
-    }
-    return fIsElevated;
+    return canRead;
 }
 
 
-BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, wchar_t* programPath, wchar_t* programArguments, wchar_t* startTime, wchar_t* expireTime, int daysInterval, wchar_t* delay, wchar_t* userID, wchar_t* repeatTask) {
+BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * hostName, char* contextType, wchar_t* programPath, wchar_t* programArguments, wchar_t* startTime, wchar_t* expireTime, int daysInterval, wchar_t* delay, wchar_t* userID, wchar_t* repeatTask, wchar_t* userName, wchar_t* userPassword) {
     BOOL actionResult = FALSE;
 	HRESULT hr = S_OK;
-
+	VARIANT vUser;
+	VARIANT vPassword;
+	VARIANT Vhost;
+	VARIANT VNull;
+	
     hr = OLE32$CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(hr)) return actionResult;
 
@@ -224,18 +225,27 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
         return actionResult;
     }
 	
-	VARIANT Vhost;
-	VARIANT VNull;
+	//connect to local or remote host
 	OLEAUT32$VariantInit(&Vhost);
 	OLEAUT32$VariantInit(&VNull);
 	Vhost.vt = VT_BSTR;
-	Vhost.bstrVal = OLEAUT32$SysAllocString(host);
+	Vhost.bstrVal = OLEAUT32$SysAllocString(hostName);
+	
+	BOOL isRemoteHost = (Vhost.bstrVal && *Vhost.bstrVal);
+	if (isRemoteHost) {
+
+		if (!CanReadRemoteWindowsDir(hostName)) {
+			BeaconPrintf(CALLBACK_ERROR, "Insufficient privileges to set a scheduled task on the remote host!");
+			return actionResult; 
+		}
+	}
 	
 	hr = pTaskService->lpVtbl->Connect(pTaskService, Vhost, VNull, VNull, VNull); 
     if (FAILED(hr)) {
 		goto cleanup;
     }
 	
+	//accessing root folder
 	ITaskFolder* pTaskFolder = NULL;
 	BSTR folderPathBstr = OLEAUT32$SysAllocString(L"\\");
 	hr = pTaskService->lpVtbl->GetFolder(pTaskService, folderPathBstr, &pTaskFolder);
@@ -244,61 +254,107 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 	}
 	OLEAUT32$SysFreeString(folderPathBstr);
 
+	//create new blank task definition object
     ITaskDefinition* pTaskDefinition = NULL;
     hr = pTaskService->lpVtbl->NewTask(pTaskService, 0, &pTaskDefinition);
     if (FAILED(hr)) {
 		goto cleanup;
     }
 	
-	BOOL isRemoteHost = (Vhost.bstrVal && *Vhost.bstrVal);
+	// set battery/ac settings to always run & change default task stop to 100 days
+	ITaskSettings* pSettings = NULL;
+	hr = pTaskDefinition->lpVtbl->get_Settings(pTaskDefinition, &pSettings);
+	if (SUCCEEDED(hr) && pSettings != NULL) {
+		//disable battery restrictions
+		pSettings->lpVtbl->put_DisallowStartIfOnBatteries(pSettings, FALSE);
+		pSettings->lpVtbl->put_StopIfGoingOnBatteries(pSettings, FALSE);
+
+		//disable "Stop the task if it runs longer than"
+		BSTR longLimit = OLEAUT32$SysAllocString(L"P100D"); 
+		pSettings->lpVtbl->put_ExecutionTimeLimit(pSettings, longLimit);
+		OLEAUT32$SysFreeString(longLimit);
+
+		pSettings->lpVtbl->Release(pSettings);
+	}
+	
+	//context options
 	IPrincipal* pPrincipal = NULL;
 	hr = pTaskDefinition->lpVtbl->get_Principal(pTaskDefinition, &pPrincipal);
 	if (SUCCEEDED(hr)) {
-		//pPrincipal->lpVtbl->put_LogonType(pPrincipal, TASK_LOGON_INTERACTIVE_TOKEN); //USE THIS LINE INSTEAD OF THE BELOW "If statement" IF ENCOUNTERING ERROR CODE: 80041310 (SYSTEM security option is not set correctly and remains NULL)
-		
-		if (IsElevated() || isRemoteHost) {
-			BeaconPrintf(CALLBACK_OUTPUT, "[*] Running in elevated context and setting \"Run whether user is logged on or not\" security option as SYSTEM!\n"); 
+		if (MSVCRT$strcmp(contextType, "current") == 0) {
+			pPrincipal->lpVtbl->put_LogonType(pPrincipal, TASK_LOGON_INTERACTIVE_TOKEN);
+		} 
+		else if (MSVCRT$strcmp(contextType, "current+") == 0) {
+			pPrincipal->lpVtbl->put_LogonType(pPrincipal, TASK_LOGON_INTERACTIVE_TOKEN);
+			pPrincipal->lpVtbl->put_RunLevel(pPrincipal, TASK_RUNLEVEL_HIGHEST);
+		}
+		else if (MSVCRT$strcmp(contextType, "system") == 0) {
 			BSTR systemUser = OLEAUT32$SysAllocString(L"SYSTEM");
 			pPrincipal->lpVtbl->put_UserId(pPrincipal, systemUser);
 			OLEAUT32$SysFreeString(systemUser);
-		}else {
-			pPrincipal->lpVtbl->put_LogonType(pPrincipal, TASK_LOGON_INTERACTIVE_TOKEN);
+		}
+		else if (MSVCRT$strcmp(contextType, "creds") == 0) {
+			OLEAUT32$VariantInit(&vUser);
+			OLEAUT32$VariantInit(&vPassword);
+			vUser.vt = VT_BSTR;
+			vPassword.vt = VT_BSTR;
+			vUser.bstrVal = OLEAUT32$SysAllocString(userName);
+			vPassword.bstrVal = OLEAUT32$SysAllocString(userPassword);
+		}
+		else if (MSVCRT$strcmp(contextType, "creds+") == 0) {
+			pPrincipal->lpVtbl->put_RunLevel(pPrincipal, TASK_RUNLEVEL_HIGHEST);
+			
+			OLEAUT32$VariantInit(&vUser);
+			OLEAUT32$VariantInit(&vPassword);
+			vUser.vt = VT_BSTR;
+			vPassword.vt = VT_BSTR;
+			vUser.bstrVal = OLEAUT32$SysAllocString(userName);
+			vPassword.bstrVal = OLEAUT32$SysAllocString(userPassword);
+		}
+		else {
+			goto cleanup;
 		}
 		
 		pPrincipal->lpVtbl->Release(pPrincipal);
 	}
 	
-
+	//trigger options
     ITriggerCollection* pTriggerCollection = NULL;
     hr = pTaskDefinition->lpVtbl->get_Triggers(pTaskDefinition, &pTriggerCollection);
     if (FAILED(hr)) {
 		goto cleanup;
     }
-
-	//trigger options
+	
 	if (MSVCRT$strcmp(triggerType, "onetime") == 0) {
 		hr = SetOneTimeTask(hr, pTriggerCollection, startTime, repeatTask);
-	} else if (MSVCRT$strcmp(triggerType, "daily") == 0) {
+	} 
+	else if (MSVCRT$strcmp(triggerType, "daily") == 0) {
 		hr = SetDailyTask(hr, pTriggerCollection, startTime, expireTime, daysInterval, delay); 
-	} else if (MSVCRT$strcmp(triggerType, "logon") == 0) {
+	} 
+	else if (MSVCRT$strcmp(triggerType, "logon") == 0) {
 		hr = SetLogonTask(hr, pTriggerCollection, userID); 
-	} else if (MSVCRT$strcmp(triggerType, "startup") == 0) {
+	} 
+	else if (MSVCRT$strcmp(triggerType, "startup") == 0) {
 		hr = SetStartUpTask(hr, pTriggerCollection, delay); 
-	} else if (MSVCRT$strcmp(triggerType, "lock") == 0) {
+	} 
+	else if (MSVCRT$strcmp(triggerType, "lock") == 0) {
 		hr = SetLockTask(hr, pTriggerCollection, userID, delay); 
-	} else if (MSVCRT$strcmp(triggerType, "unlock") == 0) {
+	} 
+	else if (MSVCRT$strcmp(triggerType, "unlock") == 0) {
 		hr = SetUnlockTask(hr, pTriggerCollection, userID, delay); 
 	} 
 	else {
 		goto cleanup;
 	}
 	
+	//gets the collection of actions for the task
 	IActionCollection* pActionCollection = NULL;
     hr = pTaskDefinition->lpVtbl->get_Actions(pTaskDefinition, &pActionCollection);
     if (FAILED(hr)) {
 		goto cleanup;
     }
 	
+	//create "execute" action
     IAction* pAction = NULL;
     hr = pActionCollection->lpVtbl->Create(pActionCollection, TASK_ACTION_EXEC, &pAction);
     if (FAILED(hr)) {
@@ -312,6 +368,7 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
 		goto cleanup;
     }
 	
+	//set which executable to run
 	BSTR programPathBstr = OLEAUT32$SysAllocString(programPath);
     hr = pExecAction->lpVtbl->put_Path(pExecAction, programPathBstr);
     if (FAILED(hr)) {
@@ -319,7 +376,7 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
     }
 	OLEAUT32$SysFreeString(programPathBstr);
 	
-	
+	//set program arguments 
 	BSTR programArgumentsBstr = OLEAUT32$SysAllocString(programArguments);
     hr = pExecAction->lpVtbl->put_Arguments(pExecAction, programArgumentsBstr);
     if (FAILED(hr)) {
@@ -330,13 +387,25 @@ BOOL CreateScheduledTask(char* triggerType, wchar_t* taskName, wchar_t * host, w
     pExecAction->lpVtbl->Release(pExecAction);
     pAction->lpVtbl->Release(pAction);
 	
+	//run
     IRegisteredTask* pRegisteredTask = NULL;
-	hr = pTaskFolder->lpVtbl->RegisterTaskDefinition(pTaskFolder, taskName, pTaskDefinition, TASK_CREATE_OR_UPDATE, VNull, VNull, TASK_LOGON_INTERACTIVE_TOKEN, VNull, &pRegisteredTask);
+	if (MSVCRT$strcmp(contextType, "current") == 0 || MSVCRT$strcmp(contextType, "current+") == 0) {
+		hr = pTaskFolder->lpVtbl->RegisterTaskDefinition(pTaskFolder, taskName, pTaskDefinition, TASK_CREATE_OR_UPDATE, VNull, VNull, TASK_LOGON_INTERACTIVE_TOKEN, VNull, &pRegisteredTask);
+	} 
+	else if (MSVCRT$strcmp(contextType, "system") == 0) {
+		hr = pTaskFolder->lpVtbl->RegisterTaskDefinition(pTaskFolder, taskName, pTaskDefinition, TASK_CREATE_OR_UPDATE, VNull, VNull, TASK_LOGON_SERVICE_ACCOUNT, VNull, &pRegisteredTask);
+	} 
+	else if (MSVCRT$strcmp(contextType, "creds") == 0 || MSVCRT$strcmp(contextType, "creds+") == 0) {
+		hr = pTaskFolder->lpVtbl->RegisterTaskDefinition(pTaskFolder, taskName, pTaskDefinition, TASK_CREATE_OR_UPDATE, vUser, vPassword, TASK_LOGON_PASSWORD, VNull, &pRegisteredTask);
+	}
+
+	OLEAUT32$VariantClear(&vUser);
+	OLEAUT32$VariantClear(&vPassword);
 
 	if (FAILED(hr)) {
         BeaconPrintf(CALLBACK_ERROR, "Failed to register the scheduled task with error code: %x\n", hr);
     } else {
-        BeaconPrintf(CALLBACK_OUTPUT, "[+] Scheduled task '%ls' created successfully!\n", taskName);
+        BeaconPrintf(CALLBACK_OUTPUT, "[+] Successfully created scheduled task: '%ls'\n", taskName);
         actionResult = TRUE;
     }
 	
@@ -365,27 +434,30 @@ cleanup:
 }
 
 
-
 int go(char *args, int len) {
 	BOOL res = NULL;
 	datap parser;
 	
+	CHAR *triggerType;
     WCHAR *taskName; 
-	WCHAR *hostName  = L""; 
+	WCHAR *hostName = L"";
+	CHAR *contextType; 
     WCHAR *programPath; 
-    WCHAR *programArguments  = L""; 
-	CHAR *triggerType; 
-	WCHAR *startTime; 
+    WCHAR *programArguments = L""; 
+	WCHAR *startTime = L"";
     WCHAR *expireTime = L""; 
 	int daysInterval = 0; 
 	WCHAR *delay = L"";
-	WCHAR *userID  = L""; 
+	WCHAR *userID  = L"";
 	WCHAR *repeatTask = L"";
+	WCHAR *userName  = L""; 
+	WCHAR *userPassword  = L""; 
 	
-	
+
 	BeaconDataParse(&parser, args, len);
 	taskName = BeaconDataExtract(&parser, NULL);
 	hostName = BeaconDataExtract(&parser, NULL);
+	contextType = BeaconDataExtract(&parser, NULL); 
 	programPath = BeaconDataExtract(&parser, NULL);
 	programArguments = BeaconDataExtract(&parser, NULL);
 	triggerType = BeaconDataExtract(&parser, NULL);
@@ -393,38 +465,44 @@ int go(char *args, int len) {
 	if (MSVCRT$strcmp(triggerType, "onetime") == 0) {
 		startTime = BeaconDataExtract(&parser, NULL);
 		repeatTask = BeaconDataExtract(&parser, NULL);
-		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask);
+		userName = BeaconDataExtract(&parser, NULL);
+		userPassword = BeaconDataExtract(&parser, NULL);
+		res = CreateScheduledTask(triggerType, taskName, hostName, contextType, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask, userName, userPassword);
 	} 
 	else if (MSVCRT$strcmp(triggerType, "daily") == 0) {
 		startTime = BeaconDataExtract(&parser, NULL);
 		expireTime = BeaconDataExtract(&parser, NULL);
 		daysInterval = BeaconDataInt(&parser);
 		delay = BeaconDataExtract(&parser, NULL);
-		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask);
+		userName = BeaconDataExtract(&parser, NULL);
+		userPassword = BeaconDataExtract(&parser, NULL);
+		res = CreateScheduledTask(triggerType, taskName, hostName, contextType, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask, userName, userPassword);
 	} 
 	else if (MSVCRT$strcmp(triggerType, "logon") == 0) {
 		userID = BeaconDataExtract(&parser, NULL);
-		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask);
+		userName = BeaconDataExtract(&parser, NULL);
+		userPassword = BeaconDataExtract(&parser, NULL);
+		res = CreateScheduledTask(triggerType, taskName, hostName, contextType, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask, userName, userPassword);
 	} 
 	else if (MSVCRT$strcmp(triggerType, "startup") == 0) {
 		delay = BeaconDataExtract(&parser, NULL);
-		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask);
-	} 
-	else if (MSVCRT$strcmp(triggerType, "lock") == 0) {
-		userID = BeaconDataExtract(&parser, NULL);
-		delay = BeaconDataExtract(&parser, NULL);
-		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask);
-	} 
-	else if (MSVCRT$strcmp(triggerType, "unlock") == 0) {
-		userID = BeaconDataExtract(&parser, NULL);
-		delay = BeaconDataExtract(&parser, NULL);
-		res = CreateScheduledTask(triggerType, taskName, hostName, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask);
+		userName = BeaconDataExtract(&parser, NULL);
+		userPassword = BeaconDataExtract(&parser, NULL);
+		res = CreateScheduledTask(triggerType, taskName, hostName, contextType, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask, userName, userPassword);
 	}
+	else if (MSVCRT$strcmp(triggerType, "lock") == 0 || MSVCRT$strcmp(triggerType, "unlock") == 0) {
+		userID = BeaconDataExtract(&parser, NULL);
+		delay = BeaconDataExtract(&parser, NULL);
+		userName = BeaconDataExtract(&parser, NULL);
+		userPassword = BeaconDataExtract(&parser, NULL);
+		res = CreateScheduledTask(triggerType, taskName, hostName, contextType, programPath, programArguments, startTime, expireTime, daysInterval, delay, userID, repeatTask, userName, userPassword);
+	} 
 	else {
-		BeaconPrintf(CALLBACK_ERROR, "Specified triggerType is not supported.\n");
+		BeaconPrintf(CALLBACK_ERROR, "Specified trigger option is not supported.\n");
 	}
 
 	return 0;
 }
+
 
 

@@ -1,0 +1,43 @@
+# author Western Tactics
+
+beacon_command_register(
+	"enumactivehosts", "Enumerate active hosts or valide a single open port.",
+	"INFO:\nEnumerate active hosts or valide single open port. Tool accepts list with predefined hostnames or IP addresses and is loaded from your own operator client. \n\n" .
+	"ARGUMENTS:\n[<path to file>]: the path on your own operator client to the file containing the list with predefined hostnames. Each hostname must be newline separated.\n[port]: port to validate.\n[timeout]: Timeout in milliseconds - how long to wait before moving to the next host (default 300 ms).\n\n" .
+	"USAGE:\nenumactivehosts <path to hostname file> <port> <timeout in ms> <mode>\n\n" .
+	"EXAMPLES:\nenumactivehosts C:\\Users\\RTO\\Documents\\hostnames.txt 445 100\n\n");
+	
+alias enumactivehosts {
+    $bid = $1;
+	$path = $2;
+	$port = $3;
+	$timeout = $4;
+	
+	$path = strrep($path, "\\", "/");
+	
+	if ($path eq "") {
+		berror($bid, "Please specify the path on your operator client to the file containing the list with newline separated hostnames.\n");
+		return;
+	}
+
+	# read in the .txt file
+	$handle = openf("$path");
+	$file = readb($handle, -1);
+	closef($handle);
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("enumactivehosts.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+	# Pack our arguments
+    $arg_data = bof_pack($bid, "bzi", $file, $port, $timeout);
+
+	blog($bid, "Tasked to enumerate active hosts or validate specific open port..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
+
+

@@ -1,4 +1,4 @@
-# author REDMED-X
+# author Western Tactics
 
 beacon_command_register(
 	"dellocalcert", "Delete a local computer certificate from a specific store.",

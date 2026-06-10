@@ -1,36 +1,55 @@
-# author REDMED-X
+# author Western Tactics
 
 beacon_command_register(
-	"enumshares", "List remote shares and there access level using a predefined list with hostnames.",
-	"INFO:\nList remote shares and there access level based on a list with predefined hostnames or IP addresses. The list is loaded from your own attacker system.\n\n" .
-	"ARGUMENTS:\n[<path to file>]: the path on your own attacker system to the file containing the list with predefined hostnames. Each hostname must be newline separated.\n\n" .
-	"USAGE:\nenumshares <path to hostname file>\n\n" .
-	"EXAMPLES:\nenumshares C:\\Users\\RTO\\Documents\\hostnames.txt\n\n");
+	"enumshares", "List remote shares and their access level using a predefined host list with smart probing.",
+	"INFO:\nList remote shares and their access level based on a list from your attacker system. This tool performs a quick TCP/445 check to skip offline hosts and uses stealthy attribute checks to verify access.\n\n" .
+	"ARGUMENTS:\n" .
+	"[path]: Path to the host list file on your attacker system.\n" .
+	"[sleep]: Seconds to wait between each host.\n" .
+	"[jitter]: Percentage of jitter to apply to the sleep (0-100).\n" .
+	"[timeout]: (Optional) Port check timeout in milliseconds (default: 300).\n\n" .
+	"USAGE:\nenumshares <path> <sleep> <jitter> <timeout>\n\n" .
+	"EXAMPLES:\nenumshares C:\\Users\\RTO\\Documents\\hostnames.txt 5 20 500\n\n");
 	
 alias enumshares {
-    $bid = $1;
+	$bid = $1;
 	$path = $2;
+	$sleep = $3;
+	$jitter = $4;
+	$timeout = $5;
 	
-	if ($path eq "") {
-		berror($bid, "Please specify the path on your own attacker system to the file containing the list with newline separated hostnames.\n");
+	# Basic validation for required arguments
+	if ($path eq "" || $sleep eq "" || $jitter eq "") {
+		berror($bid, "Missing arguments! Usage: enumshares <path> <sleep> <jitter> [timeout]");
 		return;
 	}
 
-	# read in the .txt file
-	$handle = openf("$path");
+	# Default timeout to 300ms if not provided
+	if ($timeout eq "") {
+		$timeout = 300;
+	}
+
+	# Read in the host list file
+	if (!-exists $path) {
+		berror($bid, "The file $path does not exist.");
+		return;
+	}
+	$handle = openf($path);
 	$file = readb($handle, -1);
 	closef($handle);
 	
-	blog($bid, "path: $+  $path");
-	
-    # Read in the right BOF file
-    $handle = openf(script_resource("enumshares.o"));
-    $data = readb($handle, -1);
-    closef($handle);
+	# Read in the BOF file
+	$bof_handle = openf(script_resource("enumshares.o"));
+	$bof_data = readb($bof_handle, -1);
+	closef($bof_handle);
 
-	# Pack our arguments
-    $arg_data = bof_pack($bid, "b", $file);
+	# Pack arguments: 
+	# b = host file bytes
+	# i = sleep seconds
+	# i = jitter percent
+	# i = timeout ms
+	$arg_data = bof_pack($bid, "biii", $file, $sleep, $jitter, $timeout);
 
-	blog($bid, "Tasked to enumerate remote shares..");
-    beacon_inline_execute($bid, $data, "go", $arg_data);
+	blog($bid, "Tasked to enumerate remote shares with $sleep\s sleep ($jitter\% jitter) and $timeout\ms connection timeout.");
+	beacon_inline_execute($bid, $bof_data, "go", $arg_data);
 }

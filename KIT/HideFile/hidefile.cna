@@ -1,4 +1,4 @@
-# author REDMED-X
+# author Western Tactics
 
 beacon_command_register(
     "hidefile", "Hide file or directory by setting it's attributes to systemfile + hidden.",

@@ -1,7 +1,7 @@
 # EnumFiles
 Search for matching files based on a word, extension or keyword in the file content. Wildcards are supported.
 
->Keyword matching only works for text based files like .csv, .txt or .ps1 etc. So no MS Office files like .xlsx and .docs :(. 
+>Keyword matching only works for text based files like .csv, .txt or .ps1 etc. So no MS Office files like .xlsx and .docs. 
 
 ## Arguments
 * `<path to directory>`: specify a path to the directory from which to start searching (recursive searching supported).

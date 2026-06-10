@@ -1,4 +1,4 @@
-# author REDMED-X
+# author Western Tactics
 
 beacon_command_register(
 	"executecrosssession", "Execute a binary on disk within the context of another logged-on user's session",

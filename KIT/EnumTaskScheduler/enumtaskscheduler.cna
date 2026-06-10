@@ -1,4 +1,4 @@
-# author REDMED-X
+# author Western Tactics
 
 beacon_command_register(
 	"enumtaskscheduler", "Enumerate and list all the scheduled tasks in the root folder.",
@@ -22,7 +22,6 @@ alias enumtaskscheduler {
 
 	blog($bid, "Tasked to enumerate scheduled tasks in the root folder..");
     beacon_inline_execute($bid, $data, "go", $arg_data);
-
 }
 
 

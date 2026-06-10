@@ -5,6 +5,10 @@ DECLSPEC_IMPORT BOOL WINAPI ADVAPI32$OpenProcessToken(HANDLE ProcessHandle, DWOR
 DECLSPEC_IMPORT BOOL WINAPI ADVAPI32$GetTokenInformation(HANDLE TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, LPVOID TokenInformation, DWORD TokenInformationLength, PDWORD ReturnLength);
 DECLSPEC_IMPORT BOOL WINAPI KERNEL32$CloseHandle(HANDLE hObject);
 DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$GetCurrentProcess(void);
+DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$CreateFileW(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
+
+DECLSPEC_IMPORT HRESULT WINAPI KERNEL32$StringCchPrintfW(wchar_t* pszDest, size_t cchDest, const wchar_t* pszFormat, ...);
+DECLSPEC_IMPORT int WINAPI USER32$wsprintfW(LPWSTR, LPCWSTR, ...);
 
 //CreateScheduledTask
 DECLSPEC_IMPORT HRESULT WINAPI OLE32$CoInitializeEx(LPVOID pvReserved, DWORD dwCoInit);
@@ -17,6 +21,11 @@ WINBASEAPI void WINAPI OLEAUT32$SysFreeString(BSTR);
 WINBASEAPI int __cdecl MSVCRT$printf(const char * _Format,...);
 WINBASEAPI int __cdecl MSVCRT$strcmp(const char *str1, const char *str2);
 WINBASEAPI int __cdecl MSVCRT$wcscmp(const wchar_t* str1, const wchar_t* str2);
+WINBASEAPI int __cdecl MSVCRT$swprintf(wchar_t *buffer, size_t count, const wchar_t *format, ...);
+
+
+
+
 
 
 

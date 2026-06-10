@@ -1,0 +1,40 @@
+# author Western Tactics
+
+beacon_command_register(
+	"enumdllsideloading", "Enumerate .EXE's for DLL sideloading vulnerabilities.",
+	"INFO:\nEnumerate a single .EXE, a folder or all folders recursively to identify DLL sideloading vulnerabilities. Can be used both locally and remotely.\n\n" .
+	"ARGUMENTS:\n[<path>]: Specify the path to the single .EXE or the folder that you want to check for DLL sideloading vulnerabilities.\n[<mode>]: Select one of the following enumeration modes: [single] (target single .EXE, best for OPSEC), [folder] (all the .EXE's in the specified folder), [recursive] (all .EXE's in the specified- and sub folders).\n\n" .
+	"USAGE:\nenumdllsideloading <path> <mode>\n\n" .
+	"EXAMPLES:\nenumdllsideloading C:\\Users\\John\\Documents\\Autoruns64.exe single\nenumdllsideloading C:\\Users\\John\\Documents\\ folder\nenumdllsideloading \\\\examplehost\\C$\\Users\\John\\Documents\\ recursive\n\n");
+	
+alias enumdllsideloading {
+    $bid = $1;
+    $path = $2;
+	$mode = $3;
+
+    if ($path eq "") {
+        berror($bid, "Please specify a path to start enumerating DLL sideloading vulnerabilities. \n");
+        return;
+    }
+	
+	if ($mode eq "") {
+		berror($bid, "Please specify one of the following enumeration modes: single, folder, recursive\n");
+		return;
+	}
+	
+    # Read in the right BOF file
+    $handle = openf(script_resource("enumdllsideloading.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "zz", $path, $mode);
+
+    blog($bid, "Starting DLL sideloading enumeration..");
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
+
+
+
+
+
