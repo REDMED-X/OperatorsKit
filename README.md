@@ -15,7 +15,7 @@ The following tools are currently in the OperatorsKit:
 |**[AddFirewallRule](KIT/AddFirewallRule)**|Add a new inbound/outbound firewall rule.|
 |**[AddLocalCert](KIT/AddLocalCert)**|Add a (self signed) certificate to a specific local computer certificate store.|
 |**[AddTaskScheduler](KIT/AddTaskScheduler)**|Create a scheduled task on the current- or remote host.|
-|**[AuthenticateHTTP](KIT/AuthenticateHTTP)**|Force a Windows-auhtenticated HTTP request from the current user context.|
+|**[AuthenticateHTTP](KIT/AuthenticateHTTP)**|Force a Windows-authenticated HTTP request from the current user context.|
 |**[CaptureNetNTLM](KIT/CaptureNetNTLM)**|Capture the NetNTLMv2 hash of the current user.|
 |**[CredPrompt](KIT/CredPrompt)**|Start persistent credential prompt in an attempt to capture user credentials.|
 |**[DcomLocalServer32](KIT/DcomLocalServer32)**|Instantiate a DCOM/COM class and start an EXE on a (remote) machine.|
@@ -24,7 +24,7 @@ The following tools are currently in the OperatorsKit:
 |**[DelLocalCert](KIT/DelLocalCert)**|Delete a local computer certificate from a specific store.|
 |**[DelTaskScheduler](KIT/DelTaskScheduler)**|Delete a scheduled task on the current- or a remote host.|
 |**[DllEnvHijacking](KIT/DllEnvHijacking)**|BOF implementation of DLL environment hijacking.|
-|**[EnumActiveHosts](KIT/EnumActiveHosts)**|Enumerate active hosts or valide a single open port.|
+|**[EnumActiveHosts](KIT/EnumActiveHosts)**|Enumerate active hosts or validate a single open port.|
 |**[EnumDllSideloading](KIT/EnumDllSideloading)**|Enumerate .EXE's for DLL sideloading vulnerabilities.|
 |**[EnumDrives](KIT/EnumDrives)**|Enumerate drive letters and type.|
 |**[EnumExclusions](KIT/EnumExclusions)**|Check the AV for excluded files, folders, extentions and processes.|
@@ -33,7 +33,7 @@ The following tools are currently in the OperatorsKit:
 |**[EnumLib](KIT/EnumLib)**|Enumerate loaded module(s) in remote process(es).|
 |**[EnumLocalCert](KIT/EnumLocalCert)**|Enumerate all local computer certificates from a specific store.|
 |**[EnumSecProducts](KIT/EnumSecProducts)**|Enumerate security products (like AV/EDR) that are running on the current/remote host.|
-|**[EnumShares](KIT/EnumShares)**|Enumerate remote shares and your access level using a predefined list with hostnames.|
+|**[EnumShares](KIT/EnumShares)**|Enumerate remote shares and access level using a predefined list with hostnames.|
 |**[EnumSysmon](KIT/EnumSysmon)**|Verify if Sysmon is running by checking the registry and listing Minifilter drivers.|
 |**[EnumTaskScheduler](KIT/EnumTaskScheduler)**|Enumerate all scheduled tasks in the root folder.|
 |**[EnumWebClient](KIT/EnumWebClient)**|Find hosts with the WebClient service running based on a list with predefined hostnames.|
