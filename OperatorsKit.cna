@@ -1148,7 +1148,7 @@ alias injectpoolparty {
 beacon_command_register(
 	"keyloggerrawinput", "Keylogger based on RegisterRawInputDevices",
 	"INFO:\nFirst run: the BOF registers for raw input using RegisterRawInputDevices to start capturing keystroke into Windows internal raw-input buffer (max. 10.000 WM_INPUT messages).\nNext run: the BOF drains and processes all pending WM_INPUT messages from the raw-input buffer and print the results to the beacon console.\n\n" .
-	"ARGUMENTS:\n[<option>]: specify one of the following options: "run" (start the keylogger or collect keystroke results), or "stop" (stop the keylogger).\n\n" .
+	"ARGUMENTS:\n[<option>]: specify one of the following options: \"run\" (start the keylogger or collect keystroke results), or \"stop\" (stop the keylogger).\n\n" .
 	"USAGE:\nkeyloggerrawinput <option>\n\n" .
 	"EXAMPLES:\nkeyloggerrawinput run\nkeyloggerrawinput stop\n\n");
 	
