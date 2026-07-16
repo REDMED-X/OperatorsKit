@@ -1,5 +1,5 @@
 # EnumShares
-List remote shares and their access level based on a list from your attacker system. This tool performs a quick TCP/445 check to skip offline hosts and uses stealthy attribute checks to verify access.
+List shares published across systems in the domain and there access level using a list with predefined hostnames/IP addresses. This tool performs a quick TCP/445 check to skip offline hosts and uses stealthy attribute checks to verify access.
 
 >A valid list with hostnames is considered newline separated. Furthermore, the following hostname notations are correct: `database`, `database.example.local`, `10.100.10.1`.  
 
