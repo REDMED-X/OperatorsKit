@@ -1,5 +1,5 @@
 # EnumActiveHosts
-Enumerate active hosts or valide single open port. Tool accepts list with predefined hostnames or IP addresses and is loaded from your own operator client. 
+Enumerate active hosts or verify a single open port. Tool accepts list with predefined hostnames or IP addresses and is loaded from your own operator client. 
 
 >A valid list with hostnames is considered newline separated and ends with a newline. Furthermore, the following hostname notations are correct: `database`, `database.example.local`, `10.100.10.1`.  
 
